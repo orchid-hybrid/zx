@@ -7,6 +7,7 @@
 ;; a is the accumulator register
 ;; ir is the interrupt register
 ;; rr is the refresh register
+;; af- is used for af' (in general suffix with -)
 
 ;; pg81
 (define register-table
@@ -220,4 +221,61 @@
      (1 1 1 0 0 0 0 1)) ;; E1
     
     ))
+
+(define exchange-block-transfer-search-instructions
+  '(((ex de hl) (4)
+     (1 1 1 0 1 0 1 1)) ;; EB
+    
+    ((ex af af-) (4)
+     (0 0 0 0 1 0 0 0)) ;; 08
+    
+    ((exx) (4)
+     (1 1 0 1 1 0 0 1)) ;; D9 [error in docs]
+    
+    ((ex (sp) hl) (4 3 4 3 5)
+     (1 1 1 0 0 0 1 1)) ;; E3
+    
+    ((ex (sp) ix) (4 4 3 4 3 5)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (1 1 1 0 0 0 1 1)) ;; E3
+    
+    ((ex (sp) iy) (4 4 3 4 3 5)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (1 1 1 0 0 0 1 1)) ;; E3
+    
+    ((ldi) (4 4 3 5)
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 0 0 0 0 0)) ;; A0
+    
+    ((ldir) ((4 4 3 5 5)
+	     (4 4 3 5))
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 1 0 0 0 0)) ;; B0
+    
+    ((ldd) (4 4 3 5)
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 0 1 0 0 0)) ;; A8
+    
+    ((lddr) ((4 4 3 5 5)
+	     (4 4 3 5))
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 1 1 0 0 0)) ;; B8
+    
+    ((cpi) (4 4 3 5)
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 0 0 0 0 1)) ;; A1 [error in docs]
+    
+    ((cpir) ((4 4 3 5 5)
+	     (4 4 3 5))
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 1 0 0 0 1)) ;; B1
+    
+    ((cpd) (4 4 3 5)
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 0 1 0 0 1)) ;; A9
+    
+    ((cpdr) ((4 4 3 5 5)
+	     (4 4 3 5))
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 1 1 0 0 1)))) ;; B9
 

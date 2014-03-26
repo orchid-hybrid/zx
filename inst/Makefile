@@ -8,7 +8,7 @@ disassembler: disassembler.c opcodes.h
 opcodes.h: dis.scm inst.scm
 	csi -q dis.scm all > opcodes.h
 
-test: tmp test8 test16
+test: tmp test8 test16 testexch
 	echo "all tests passed!"
 
 tmp:
@@ -22,4 +22,9 @@ test8:
 test16:
 	csi -q dis.scm 16-bit-load-instructions > tmp/16_bit_load_instructions.h
 	diff tmp/16_bit_load_instructions.h tests/16_bit_load_instructions.h
+	echo "passed!"
+
+testexch:
+	csi -q dis.scm exchange-block-transfer-search-instructions > tmp/exchange_block_transfer_search_instructions.h
+	diff tmp/exchange_block_transfer_search_instructions.h tests/exchange_block_transfer_search_instructions.h
 	echo "passed!"

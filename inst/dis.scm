@@ -202,6 +202,8 @@
 	     "r")
 	    ((equal? sym 'ir)
 	     "i")
+	    ((equal? sym 'af-)
+	     "af'")
 	    ((and (list? sym)
 		  (equal? (car sym) '+)
 		  (equal? (cadr sym) 'ix))
@@ -212,7 +214,8 @@
 	     "(iy+%d)")
 	    ((symbol? sym)
 	     (symbol->string sym))
-	    ((or (equal? sym '(hl))
+	    ((or (equal? sym '(sp))
+		 (equal? sym '(hl))
 		 (equal? sym '(bc))
 		 (equal? sym '(de)))
 	     (string-append "(" (symbol->string (car sym)) ")"))
@@ -272,7 +275,8 @@
 			     "return " (bytes-consumed-by-opcode (first opcode-group)) ";" "\n"))))))
 
 (define all-instructions (append 8-bit-load-instructions
-				 16-bit-load-instructions))
+				 16-bit-load-instructions
+				 exchange-block-transfer-search-instructions))
 
 (define current-instruction-set
   (case (with-input-from-string
@@ -280,6 +284,7 @@
 	  read)
     ((8-bit-load-instructions) 8-bit-load-instructions)
     ((16-bit-load-instructions) 16-bit-load-instructions)
+    ((exchange-block-transfer-search-instructions) exchange-block-transfer-search-instructions)
     ((all) all-instructions)
     (else (print "Error: invalid command line parameter") '())))
 
