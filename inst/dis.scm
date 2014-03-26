@@ -276,7 +276,8 @@
 
 (define all-instructions (append 8-bit-load-instructions
 				 16-bit-load-instructions
-				 exchange-block-transfer-search-instructions))
+				 exchange-block-transfer-search-instructions
+				 8-bit-arithmetic-instructions))
 
 (define current-instruction-set
   (case (with-input-from-string
@@ -285,6 +286,7 @@
     ((8-bit-load-instructions) 8-bit-load-instructions)
     ((16-bit-load-instructions) 16-bit-load-instructions)
     ((exchange-block-transfer-search-instructions) exchange-block-transfer-search-instructions)
+    ((8-bit-arithmetic-instructions) 8-bit-arithmetic-instructions)
     ((all) all-instructions)
     (else (print "Error: invalid command line parameter") '())))
 
