@@ -32,6 +32,6 @@ testexch:
 	echo "passed!"
 
 testarith:
-	csi -q dis.scm 16-bit-arithmetic-instructions > tmp/16_bit_arithmetic_instructions.h
-	diff tmp/16_bit_arithmetic_instructions.h tests/16_bit_arithmetic_instructions.h
+	csi -q dis.scm 8-bit-arithmetic-instructions > tmp/8_bit_arithmetic_instructions.h
+	diff tmp/8_bit_arithmetic_instructions.h tests/8_bit_arithmetic_instructions.h
 	echo "passed!"
