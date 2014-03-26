@@ -214,6 +214,8 @@
 	     "(iy+%d)")
 	    ((symbol? sym)
 	     (symbol->string sym))
+	    ((number? sym)
+	     (number->string sym))
 	    ((or (equal? sym '(sp))
 		 (equal? sym '(hl))
 		 (equal? sym '(bc))
@@ -277,7 +279,8 @@
 (define all-instructions (append 8-bit-load-instructions
 				 16-bit-load-instructions
 				 exchange-block-transfer-search-instructions
-				 8-bit-arithmetic-instructions))
+				 8-bit-arithmetic-instructions
+				 general-purpose-control-instructions))
 
 (define current-instruction-set
   (case (with-input-from-string
@@ -287,6 +290,7 @@
     ((16-bit-load-instructions) 16-bit-load-instructions)
     ((exchange-block-transfer-search-instructions) exchange-block-transfer-search-instructions)
     ((8-bit-arithmetic-instructions) 8-bit-arithmetic-instructions)
+    ((general-purpose-control-instructions) general-purpose-control-instructions)
     ((all) all-instructions)
     (else (print "Error: invalid command line parameter") '())))
 
