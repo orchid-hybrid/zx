@@ -8,8 +8,11 @@ disassembler: disassembler.c opcodes.h
 opcodes.h: dis.scm inst.scm
 	csi -q dis.scm all > opcodes.h
 
-test: test8 test16
+test: tmp test8 test16
 	echo "all tests passed!"
+
+tmp:
+	mkdir -p tmp
 
 test8:
 	csi -q dis.scm 8-bit-load-instructions > tmp/8_bit_load_instructions.h
