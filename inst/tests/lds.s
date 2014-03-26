@@ -29,7 +29,7 @@
 	LD	(IX+99),C
 	LD	(IY-121),H
 	LD	(HL),E
-	LD	(HL),F
+	LD	(HL),C
 	LD	(HL),$48
 	LD	(HL),$35
 	LD	A,(BC)
