@@ -18,8 +18,8 @@ int main(int argc, char **argv) {
   long size;
   unsigned char *data;
   
-  if(argc != 2) {
-    puts("usage: disassemble <file.bin>");
+  if(argc != 2 && argc != 3) {
+    puts("usage: disassemble <file.bin> [$offset]");
     return EXIT_FAILURE;
   }
   
@@ -36,10 +36,13 @@ int main(int argc, char **argv) {
   fclose(fptr);
   
   // since wla-dx adds some header stuff
-  size -= 0x3E;
-  data += 0x3E;
+  if(argc == 3) {
+    size -= strtol(argv[2], NULL, 16);
+    data += strtol(argv[2], NULL, 16);
+  }
   
   {
+
     int result, bytes;
     bytes = 0;
     printf("0x%.4x: ", bytes);

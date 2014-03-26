@@ -84,6 +84,23 @@
 				       nd-sym nd-sym nd-sym nd-sym)
 				 nd-bits))))))
 
+(define (expand-helper-3 dd-sym opcode-specification)
+  ;; abstract out dd from the opcode-spec and (d d) from the bit pattern
+  (let ((mnemonic (list-ref opcode-specification 0))
+	(t-cycles (list-ref opcode-specification 1))
+	(bit-patterns (cddr opcode-specification)))
+    (lambda (dd dd-bits)
+      (define (replace-bit-pattern pat)
+	(if (>= (length pat) 2)
+	    (if (equal? (list (first pat) (second pat))
+			(list dd-sym dd-sym))
+		(append dd-bits (cddr pat))
+		(cons (car pat) (replace-bit-pattern (cdr pat))))
+	    pat))
+      (cons (deep-replace mnemonic dd-sym dd)
+	    (cons t-cycles
+		  (map replace-bit-pattern bit-patterns))))))
+
 (define (expand-opcode opcode-specification)
   ;; turn an opcode-specification into a list of opcode-specifications
   ;; by expanding the values of r and r2 into every possible register combination
@@ -101,17 +118,39 @@
 	       (list opcode-specification))))
       
       (if (member 'r2 mnemonic)
+	  (set! r-expanded
 	  (apply append
 		 (map (lambda (opcode-specification)
 			
 			(let ((expander (expand-helper-1 'r2 opcode-specification)))
 			  (map (lambda (register-entry) (expander (first register-entry)
 								  (second register-entry)))
-			       register-table))
+			       register-table)))
+	       r-expanded))))
+      
+      (if (member 'dd mnemonic)
+	  (set! r-expanded
+	  (apply append
+		 (map (lambda (opcode-specification)
 			
-			)
-	       r-expanded))
-	  r-expanded))
+			(let ((expander (expand-helper-3 'dd opcode-specification)))
+			  (map (lambda (register-entry) (expander (first register-entry)
+								  (second register-entry)))
+			       dd-table)))
+		      r-expanded))))
+      
+      (if (member 'qq mnemonic)
+	  (set! r-expanded
+	  (apply append
+		 (map (lambda (opcode-specification)
+			
+			(let ((expander (expand-helper-3 'qq opcode-specification)))
+			  (map (lambda (register-entry) (expander (first register-entry)
+								  (second register-entry)))
+			       qq-table)))
+		      r-expanded))))
+      
+      r-expanded)
     
     ))
 
@@ -151,10 +190,14 @@
     (number->string (length (cddr opcode))))
   (define (printf-command-for-opcode opcode)
     (define (printf-format-string sym)
-      (cond ((or (equal? sym 'nn) (equal? sym '(nn)))
-	     "0x%04x")
-	    ((or (equal? sym 'n) (equal? sym '(n)))
-	     "0x%02x")
+      (cond ((equal? sym 'nn)
+	     "0x%04X")
+	    ((equal? sym '(nn))
+	     "(0x%04X)")
+	    ((equal? sym 'n)
+	     "0x%02X")
+	    ((equal? sym '(n))
+	     "(0x%02X)")
 	    ((equal? sym 'rr)
 	     "r")
 	    ((equal? sym 'ir)
@@ -228,11 +271,23 @@
 			     (printf-command-for-opcode (first opcode-group))
 			     "return " (bytes-consumed-by-opcode (first opcode-group)) ";" "\n"))))))
 
+(define all-instructions (append 8-bit-load-instructions
+				 16-bit-load-instructions))
+
+(define current-instruction-set
+  (case (with-input-from-string
+	    (caddr (command-line-arguments)) ;; command line parameters will be -q then dis.scm THEN the atom
+	  read)
+    ((8-bit-load-instructions) 8-bit-load-instructions)
+    ((16-bit-load-instructions) 16-bit-load-instructions)
+    ((all) all-instructions)
+    (else (print "Error: invalid command line parameter") '())))
+
 (define expanded-instructions
   (group-by (lambda (op-1 op-2)
 	      ;; test if the first byte of their opcode is the same
 	      (equal? (third op-1) (third op-2)))
-	    (apply append (map expand-opcode 8-bit-load-instructions))))
+	    (apply append (map expand-opcode current-instruction-set))))
 
 (for-each (lambda (opcode-group)
 	    (print (disassembler opcode-group))
