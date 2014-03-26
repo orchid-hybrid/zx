@@ -376,7 +376,8 @@
      (1 0 1 1 0 1 1 0) ;; B6
      (d d d d d d d d))
     
-    ;; ????
+    ;; these were wrong in the book
+    ;; used the undocumented z80 documented pg30 to correct
     ((xor r) (4)
      (1 0 1 0 1 r r r))
     ((xor n) (4 3)
@@ -408,4 +409,31 @@
      (1 1 1 1 1 1 0 1) ;; FD
      (1 0 1 1 1 1 1 0) ;; BE
      (d d d d d d d d))
+    
+    ((inc r) (4)
+     (0 0 r r r 1 0 0))
+    ((inc (hl)) (4 4 3)
+     (0 0 1 1 0 1 0 0)) ;; 34
+    ((inc (+ ix d)) (4 4 3 5 4 3)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (0 0 1 1 0 1 0 0) ;; 34
+     (d d d d d d d d))
+    ((inc (+ iy d)) (4 4 3 5 4 3)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (0 0 1 1 0 1 0 0) ;; 34
+     (d d d d d d d d))
+    
+    ((dec r) (4)
+     (0 0 r r r 1 0 1))
+    ((dec (hl)) (4 4 3)
+     (0 0 1 1 0 1 0 1)) ;; 35
+    ((dec (+ ix d)) (4 4 3 5 4 3)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (0 0 1 1 0 1 0 1) ;; 35
+     (d d d d d d d d))
+    ((dec (+ iy d)) (4 4 3 5 4 3)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (0 0 1 1 0 1 0 1) ;; 35
+     (d d d d d d d d))
+    
     ))

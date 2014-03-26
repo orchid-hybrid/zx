@@ -56,6 +56,16 @@ return 1;
 case 0xDD:
 if(size < 2) return -1;
 switch(data[1]) {
+case 0x35:
+if(size < 3) return -1;
+d = ((signed char*)data)[2];
+printf("dec (ix+%d)\n", d);
+return 3;
+case 0x34:
+if(size < 3) return -1;
+d = ((signed char*)data)[2];
+printf("inc (ix+%d)\n", d);
+return 3;
 case 0xBE:
 if(size < 3) return -1;
 d = ((signed char*)data)[2];
@@ -104,6 +114,16 @@ return -1;
 case 0xFD:
 if(size < 2) return -1;
 switch(data[1]) {
+case 0x35:
+if(size < 3) return -1;
+d = ((signed char*)data)[2];
+printf("dec (iy+%d)\n", d);
+return 3;
+case 0x34:
+if(size < 3) return -1;
+d = ((signed char*)data)[2];
+printf("inc (iy+%d)\n", d);
+return 3;
 case 0xBE:
 if(size < 3) return -1;
 d = ((signed char*)data)[2];
@@ -531,6 +551,102 @@ return 2;
 case 0xBE:
 if(size < 1) return -1;
 printf("cp (hl)\n");
+return 1;
+
+
+case 0x3C:
+if(size < 1) return -1;
+printf("inc a\n");
+return 1;
+
+
+case 0x04:
+if(size < 1) return -1;
+printf("inc b\n");
+return 1;
+
+
+case 0x0C:
+if(size < 1) return -1;
+printf("inc c\n");
+return 1;
+
+
+case 0x14:
+if(size < 1) return -1;
+printf("inc d\n");
+return 1;
+
+
+case 0x1C:
+if(size < 1) return -1;
+printf("inc e\n");
+return 1;
+
+
+case 0x24:
+if(size < 1) return -1;
+printf("inc h\n");
+return 1;
+
+
+case 0x2C:
+if(size < 1) return -1;
+printf("inc l\n");
+return 1;
+
+
+case 0x34:
+if(size < 1) return -1;
+printf("inc (hl)\n");
+return 1;
+
+
+case 0x3D:
+if(size < 1) return -1;
+printf("dec a\n");
+return 1;
+
+
+case 0x05:
+if(size < 1) return -1;
+printf("dec b\n");
+return 1;
+
+
+case 0x0D:
+if(size < 1) return -1;
+printf("dec c\n");
+return 1;
+
+
+case 0x15:
+if(size < 1) return -1;
+printf("dec d\n");
+return 1;
+
+
+case 0x1D:
+if(size < 1) return -1;
+printf("dec e\n");
+return 1;
+
+
+case 0x25:
+if(size < 1) return -1;
+printf("dec h\n");
+return 1;
+
+
+case 0x2D:
+if(size < 1) return -1;
+printf("dec l\n");
+return 1;
+
+
+case 0x35:
+if(size < 1) return -1;
+printf("dec (hl)\n");
 return 1;
 
 

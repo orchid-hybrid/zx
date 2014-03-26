@@ -1,35 +1,35 @@
 .SECTION "MAIN"
-	ADD	A
-	ADD	B
-	ADD	C
-	ADD	D
-	ADD	E
-	ADD	H
-	ADD	L
-	ADD	$00
-	ADD	$35
-	ADD	$FF
-	ADD	(HL)
-	ADD	(IX-7)
-	ADD	(IX+4)
-	ADD	(IY-47)
-	ADD	(IY+74)
+	ADD	A,A
+	ADD	A,B
+	ADD	A,C
+	ADD	A,D
+	ADD	A,E
+	ADD	A,H
+	ADD	A,L
+	ADD	A,$00
+	ADD	A,$35
+	ADD	A,$FF
+	ADD	A,(HL)
+	ADD	A,(IX-7)
+	ADD	A,(IX+4)
+	ADD	A,(IY-47)
+	ADD	A,(IY+74)
 	
-	ADC	A
-	ADC	B
-	ADC	C
-	ADC	D
-	ADC	E
-	ADC	H
-	ADC	L
-	ADC	$00
-	ADC	$35
-	ADC	$FF
-	ADC	(HL)
-	ADC	(IX-7)
-	ADC	(IX+4)
-	ADC	(IY-47)
-	ADC	(IY+74)
+	ADC	A,A
+	ADC	A,B
+	ADC	A,C
+	ADC	A,D
+	ADC	A,E
+	ADC	A,H
+	ADC	A,L
+	ADC	A,$00
+	ADC	A,$35
+	ADC	A,$FF
+	ADC	A,(HL)
+	ADC	A,(IX-7)
+	ADC	A,(IX+4)
+	ADC	A,(IY-47)
+	ADC	A,(IY+74)
 	
 	SUB	A
 	SUB	B
@@ -47,21 +47,21 @@
 	SUB	(IY-47)
 	SUB	(IY+74)
 	
-	SBC	A
-	SBC	B
-	SBC	C
-	SBC	D
-	SBC	E
-	SBC	H
-	SBC	L
-	SBC	$00
-	SBC	$35
-	SBC	$FF
-	SBC	(HL)
-	SBC	(IX-7)
-	SBC	(IX+4)
-	SBC	(IY-47)
-	SBC	(IY+74)
+	SBC	A,A
+	SBC	A,B
+	SBC	A,C
+	SBC	A,D
+	SBC	A,E
+	SBC	A,H
+	SBC	A,L
+	SBC	A,$00
+	SBC	A,$35
+	SBC	A,$FF
+	SBC	A,(HL)
+	SBC	A,(IX-7)
+	SBC	A,(IX+4)
+	SBC	A,(IY-47)
+	SBC	A,(IY+74)
 
 	AND	A
 	AND	B
@@ -126,4 +126,14 @@
 	CP	(IX+4)
 	CP	(IY-47)
 	CP	(IY+74)
+
+	INC	H
+	INC	(HL)
+	INC	(IX+70)
+	INC	(IY-40)
+	
+	DEC	H
+	DEC	(HL)
+	DEC	(IX+70)
+	DEC	(IY-40)
 .ENDS
