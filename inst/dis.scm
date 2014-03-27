@@ -109,73 +109,28 @@
 	(bit-patterns (cddr opcode-specification)))
     (assert (every (lambda (pat) (= 8 (length pat))) bit-patterns))
     
-    (let ((r-expanded
-	   (if (member 'r mnemonic)
-	       (let ((expander (expand-helper-1 'r opcode-specification)))
-		 (map (lambda (register-entry) (expander (first register-entry)
-							 (second register-entry)))
-		      register-table))
-	       (list opcode-specification))))
+    (let ((r-expanded (list opcode-specification)))
+      (define (perform-expander expander-helper sym table)
+	(if (member sym mnemonic)
+	    (apply append
+		   (map (lambda (opcode-specification)
+			  (let ((expander (expander-helper sym opcode-specification)))
+			    (map (lambda (entry) (expander (first entry)
+							   (second entry)))
+				 table)))
+			r-expanded))
+	    r-expanded))
       
-      (if (member 'r2 mnemonic)
-	  (set! r-expanded
-	  (apply append
-		 (map (lambda (opcode-specification)
-			
-			(let ((expander (expand-helper-1 'r2 opcode-specification)))
-			  (map (lambda (register-entry) (expander (first register-entry)
-								  (second register-entry)))
-			       register-table)))
-	       r-expanded))))
+      (set! r-expanded (perform-expander expand-helper-1 'r register-table))
+      (set! r-expanded (perform-expander expand-helper-1 'r2 register-table))
+      (set! r-expanded (perform-expander expand-helper-3 'dd dd-table))
+      (set! r-expanded (perform-expander expand-helper-3 'qq qq-table))
+      (set! r-expanded (perform-expander expand-helper-3 'pp pp-table))
+      (set! r-expanded (perform-expander expand-helper-3 'rr rr-table))
+      (set! r-expanded (perform-expander expand-helper-1 'cc cc-table))
+      (set! r-expanded (perform-expander expand-helper-1 'tt tt-table))
       
-      (if (member 'dd mnemonic)
-	  (set! r-expanded
-	  (apply append
-		 (map (lambda (opcode-specification)
-			
-			(let ((expander (expand-helper-3 'dd opcode-specification)))
-			  (map (lambda (register-entry) (expander (first register-entry)
-								  (second register-entry)))
-			       dd-table)))
-		      r-expanded))))
-      
-      (if (member 'qq mnemonic)
-	  (set! r-expanded
-	  (apply append
-		 (map (lambda (opcode-specification)
-			
-			(let ((expander (expand-helper-3 'qq opcode-specification)))
-			  (map (lambda (register-entry) (expander (first register-entry)
-								  (second register-entry)))
-			       qq-table)))
-		      r-expanded))))
-      
-      (if (member 'pp mnemonic)
-	  (set! r-expanded
-	  (apply append
-		 (map (lambda (opcode-specification)
-			
-			(let ((expander (expand-helper-3 'pp opcode-specification)))
-			  (map (lambda (register-entry) (expander (first register-entry)
-								  (second register-entry)))
-			       pp-table)))
-		      r-expanded))))
-      
-      (if (member 'rr mnemonic)
-	  (set! r-expanded
-	  (apply append
-		 (map (lambda (opcode-specification)
-			
-			(let ((expander (expand-helper-3 'rr opcode-specification)))
-			  (map (lambda (register-entry) (expander (first register-entry)
-								  (second register-entry)))
-			       rr-table)))
-		      r-expanded))))
-      
-      r-expanded)
-    
-    ))
-
+      r-expanded)))
 
 (define (disassembler opcode-group)
   (define (case-command-for-opcode opcode bytes-consumed)
@@ -191,6 +146,10 @@
 		       (set! i (+ 1 i))
 		       (string-append
 			"d = ((signed char*)data)["(number->string i)"];" "\n"))
+		      ((equal? byte '(e e e e e e e e))
+		       (set! i (+ 1 i)) ;; assumes we can't have a d and an e together
+		       (string-append
+			"d = ((signed char*)data)["(number->string i)"];;" "\n"))
 		      ((equal? byte '(n n n n n n n n))
 		       (if seen-n
 			   ""
@@ -207,6 +166,7 @@
 			    ""))))
 	    bytes)))))
   (define (t-cycles-for-opcode opcode)
+    ;; doesn't handle conditional time instructions
     (number->string (apply + (second opcode))))
   (define (bytes-consumed-by-opcode opcode)
     (number->string (length (cddr opcode))))
@@ -220,6 +180,8 @@
 	     "0x%02X")
 	    ((equal? sym '(n))
 	     "(0x%02X)")
+	    ((equal? sym 'ee)
+	     "+%d")
 	    ((equal? sym 'rr-)
 	     "r")
 	    ((equal? sym 'ir)
@@ -241,7 +203,10 @@
 	    ((or (equal? sym '(sp))
 		 (equal? sym '(hl))
 		 (equal? sym '(bc))
-		 (equal? sym '(de)))
+		 (equal? sym '(de))
+		 (equal? sym '(ix))
+		 (equal? sym '(iy))
+		 (equal? sym '(c)))
 	     (string-append "(" (symbol->string (car sym)) ")"))
 	    (else
 	     (print sym)
@@ -253,6 +218,8 @@
 		 (equal? sym '(n))) "n")
 	    ((or ;;(equal? sym 'd) ;; this is the register d
 		 (and (list? sym) (member 'd sym))) "d")
+	    ((equal? sym 'ee)
+	     "d")
 	    (else #f)))
     (let* ((instruction (first opcode))
 	   (nmemonic (symbol->string (first instruction))))
@@ -305,6 +272,9 @@
 				 general-purpose-control-instructions
 				 16-bit-arithmetic-instructions
 				 ;;rotate-and-shift-instructions ;; hard
+				 jump-instructions
+				 call-and-return-instructions
+				 input-output-instructions
 				 ))
 
 (define current-instruction-set
@@ -318,6 +288,9 @@
     ((general-purpose-control-instructions) general-purpose-control-instructions)
     ((16-bit-arithmetic-instructions) 16-bit-arithmetic-instructions)
     ((rotate-and-shift-instructions) rotate-and-shift-instructions)
+    ((jump-instructions) jump-instructions)
+    ((call-and-return-instructions) call-and-return-instructions)
+    ((input-output-instructions) input-output-instructions)
     ((all) all-instructions)
     (else (print "Error: invalid command line parameter") '())))
 
