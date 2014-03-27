@@ -6,10 +6,11 @@
 ;; nn is a 16 bit integer
 ;; a is the accumulator register
 ;; ir is the interrupt register
-;; rr is the refresh register
+;; rr- is the refresh register [added - suffix to avoid clash with rr expander]
 ;; af- is used for af' (in general suffix with -)
 
 ;; pg81
+;; pg194 - same but different order
 (define register-table
   '((a (1 1 1))
     (b (0 0 0))
@@ -32,6 +33,23 @@
     (de (0 1))
     (hl (1 0))
     (af (1 1))))
+
+;; pg179
+;(define ss-table dd-table) ;; just use dd
+
+;; pg182
+(define pp-table
+  '((bc (0 0))
+    (de (0 1))
+    (ix (1 0))
+    (sp (1 1))))
+
+;; pg182
+(define rr-table
+  '((bc (0 0))
+    (de (0 1))
+    (iy (1 0))
+    (sp (1 1))))
 
 (define 8-bit-load-instructions
   '(((ld r r2) (4)
@@ -109,7 +127,7 @@
      (1 1 1 0 1 1 0 1) ;; ED
      (0 1 0 1 0 1 1 1)) ;; 57
     
-    ((ld a rr) (4 5)
+    ((ld a rr-) (4 5)
      (1 1 1 0 1 1 0 1) ;; ED
      (0 1 0 1 1 1 1 1)) ;; 5F
     
@@ -117,7 +135,7 @@
      (1 1 1 0 1 1 0 1) ;; ED
      (0 1 0 0 0 1 1 1)) ;; 47
     
-    ((ld rr a) (4 5)
+    ((ld rr- a) (4 5)
      (1 1 1 0 1 1 0 1) ;; ED
      (0 1 0 0 1 1 1 1)) ;; 4F
     
@@ -478,3 +496,182 @@
      (0 1 0 1 1 1 1 0)) ;; 5E
     
     ))
+
+(define 16-bit-arithmetic-instructions
+  '(((add hl dd) (4 4 3)
+     (0 0 dd dd 1 0 0 1))
+    
+    ((adc hl dd) (4 4 4 3)
+     (1 1 1  0  1 1 0 1) ;; ED
+     (0 1 dd dd 1 0 1 0))
+    
+    ((sbc hl dd) (4 4 4 3)
+     (1 1 1  0  1 1 0 1) ;; ED
+     (0 1 dd dd 0 0 1 0))
+    
+    ((add ix pp) (4 4 4 3)
+     (1 1 0  1  1 1 0 1) ;; DD
+     (0 0 pp pp 1 0 0 1))
+    
+    ((add iy rr) (4 4 4 3)
+     (1 1 1  1  1 1 0 1) ;; FD
+     (0 0 rr rr 1 0 0 1))
+    
+    ((inc dd) (6)
+     (0 0 dd dd 0 0 1 1))
+    ((inc ix) (4 6)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (0 0 1 0 0 0 1 1)) ;; 23
+    ((inc iy) (4 6)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (0 0 1 0 0 0 1 1)) ;; 23
+    
+    ((dec dd) (6)
+     (0 0 dd dd 1 0 1 1))
+    ((dec ix) (4 6)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (0 0 1 0 1 0 1 1)) ;; 2B
+    ((dec iy) (4 6)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (0 0 1 0 1 0 1 1)) ;; 2B
+    
+    ))
+
+(define rotate-and-shift-instructions
+  '(((rlca) (4)
+     (0 0 0 0 0 1 1 1)) ;; 07
+    ((rla) (4)
+     (0 0 0 1 0 1 1 1)) ;; 17
+    ((rrca) (4)
+     (0 0 0 0 1 1 1 1)) ;; 0F
+    ((rra) (4)
+     (0 0 0 1 1 1 1 1)) ;; 1F
+    
+    ((rlc r) (4 4)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 0 0 0 0 r r r))
+    ((rlc (hl)) (4 4 4 3)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 0 0 0 0 1 1 0)) ;; 06
+    ((rlc (+ ix d)) (4 4 3 5 4 3)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 0 0 0 0 1 1 0)) ;; 06
+    ((rlc (+ iy d)) (4 4 3 5 4 3)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 0 0 0 0 1 1 0)) ;; 06
+    
+    ((rl r) (4 4)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 0 0 1 0 r r r))
+    ((rl (hl)) (4 4 4 3)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 0 0 1 0 1 1 0)) ;; 16
+    ((rl (+ ix d)) (4 4 3 5 4 3)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 0 0 1 0 1 1 0)) ;; 16
+    ((rl (+ iy d)) (4 4 3 5 4 3)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 0 0 1 0 1 1 0)) ;; 16
+    
+    ((rrc r) (4 4)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 0 0 0 1 r r r))
+    ((rrc (hl)) (4 4 4 3)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 0 0 0 1 1 1 0)) ;; 0E
+    ((rrc (+ ix d)) (4 4 3 5 4 3)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 0 0 0 1 1 1 0)) ;; 0E
+    ((rrc (+ iy d)) (4 4 3 5 4 3)
+     (1 1 1 1 1 1 0 1) ;; FD [error in docs]
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 0 0 0 1 1 1 0)) ;; 0E
+    
+    ((rr r) (4 4)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 0 0 1 1 r r r)) ;; [error in docs]
+    ((rr (hl)) (4 4 4 3)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 0 0 1 1 1 1 0)) ;; 1E [error in docs]
+    ((rr (+ ix d)) (4 4 3 5 4 3)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 0 0 1 1 1 1 0)) ;; 1E
+    ((rr (+ iy d)) (4 4 3 5 4 3)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 0 0 1 1 1 1 0)) ;; 1E
+    
+    ((sla r) (4 4)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 0 1 0 0 r r r))
+    ((sla (hl)) (4 4 4 3)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 0 1 0 0 1 1 0)) ;; 26
+    ((sla (+ ix d)) (4 4 3 5 4 3)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 0 1 0 0 1 1 0)) ;; 26
+    ((sla (+ iy d)) (4 4 3 5 4 3)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 0 1 0 0 1 1 0)) ;; 26
+    
+    ((sra r) (4 4)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 0 1 0 1 r r r)) ;; [guess due to doc clash]
+    ((sra (hl)) (4 4 4 3)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 0 1 0 1 1 1 0)) ;; 2E
+    ((sra (+ ix d)) (4 4 3 5 4 3)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 0 1 0 1 1 1 0)) ;; 2E
+    ((sra (+ iy d)) (4 4 3 5 4 3)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 0 1 0 1 1 1 0)) ;; 2E
+
+    ((srl r) (4 4)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 0 1 1 1 r r r)) ;; [guess due to doc clash]
+    ((srl (hl)) (4 4 4 3)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 0 1 1 1 1 1 0)) ;; 3E
+    ((srl (+ ix d)) (4 4 3 5 4 3)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 0 1 1 1 1 1 0)) ;; 3E
+    ((srl (+ iy d)) (4 4 3 5 4 3)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 0 1 1 1 1 1 0)) ;; 3E
+    
+    ((rld) (4 4 3 4 3)
+     (1 1 1 0 1 1 0 1) ;; ED
+     (0 1 1 0 1 1 1 1)) ;; 6F
+    ((rrd) (4 4 3 4 3)
+     (1 1 1 0 1 1 0 1) ;; ED
+     (0 1 1 0 0 1 1 1)) ;; 67
+    
+    ))
+

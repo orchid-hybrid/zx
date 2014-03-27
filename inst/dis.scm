@@ -150,6 +150,28 @@
 			       qq-table)))
 		      r-expanded))))
       
+      (if (member 'pp mnemonic)
+	  (set! r-expanded
+	  (apply append
+		 (map (lambda (opcode-specification)
+			
+			(let ((expander (expand-helper-3 'pp opcode-specification)))
+			  (map (lambda (register-entry) (expander (first register-entry)
+								  (second register-entry)))
+			       pp-table)))
+		      r-expanded))))
+      
+      (if (member 'rr mnemonic)
+	  (set! r-expanded
+	  (apply append
+		 (map (lambda (opcode-specification)
+			
+			(let ((expander (expand-helper-3 'rr opcode-specification)))
+			  (map (lambda (register-entry) (expander (first register-entry)
+								  (second register-entry)))
+			       rr-table)))
+		      r-expanded))))
+      
       r-expanded)
     
     ))
@@ -198,7 +220,7 @@
 	     "0x%02X")
 	    ((equal? sym '(n))
 	     "(0x%02X)")
-	    ((equal? sym 'rr)
+	    ((equal? sym 'rr-)
 	     "r")
 	    ((equal? sym 'ir)
 	     "i")
@@ -280,7 +302,10 @@
 				 16-bit-load-instructions
 				 exchange-block-transfer-search-instructions
 				 8-bit-arithmetic-instructions
-				 general-purpose-control-instructions))
+				 general-purpose-control-instructions
+				 16-bit-arithmetic-instructions
+				 ;;rotate-and-shift-instructions ;; hard
+				 ))
 
 (define current-instruction-set
   (case (with-input-from-string
@@ -291,6 +316,8 @@
     ((exchange-block-transfer-search-instructions) exchange-block-transfer-search-instructions)
     ((8-bit-arithmetic-instructions) 8-bit-arithmetic-instructions)
     ((general-purpose-control-instructions) general-purpose-control-instructions)
+    ((16-bit-arithmetic-instructions) 16-bit-arithmetic-instructions)
+    ((rotate-and-shift-instructions) rotate-and-shift-instructions)
     ((all) all-instructions)
     (else (print "Error: invalid command line parameter") '())))
 
