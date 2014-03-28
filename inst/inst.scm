@@ -1,4 +1,4 @@
-;; TODO make a test .asm file with all 8-bit-load-instructions
+ ;; TODO make a test .asm file with all 8-bit-load-instructions
 
 ;; r and r2 index into register-table
 ;; n is an 8 bit integer
@@ -50,6 +50,28 @@
     (de (0 1))
     (iy (1 0))
     (sp (1 1))))
+
+;; pg239
+(define cc-table
+  '((nz (0 0 0))
+    (z  (0 0 1))
+    (nc (0 1 0))
+    (c  (0 1 1))
+    (po (1 0 0))
+    (pe (1 0 1))
+    (p  (1 1 0))
+    (m  (1 1 1))))
+
+;; pg267
+(define tt-table
+  '((#x00 (0 0 0))
+    (#x08 (0 0 1))
+    (#x10 (0 1 0))
+    (#x18 (0 1 1))
+    (#x20 (1 0 0))
+    (#x28 (1 0 1))
+    (#x30 (1 1 0))
+    (#x38 (1 1 1))))
 
 (define 8-bit-load-instructions
   '(((ld r r2) (4)
@@ -675,3 +697,118 @@
     
     ))
 
+(define jump-instructions
+  '(((jp nn) (4 3 3)
+     (1 1 0 0 0 0 1 1) ;; C3
+     (n n n n n n n n)
+     (n n n n n n n n))
+    
+    ((jp cc nn) (4 3 3)
+     (1 1 cc cc cc 0 1 0)
+     (n n n  n  n  n n n)
+     (n n n  n  n  n n n))
+    
+    ((jr ee) (4 3 5)
+     (0 0 0 1 1 0 0 0) ;; 18
+     (e e e e e e e e))
+    ((jr c ee) ((4 3 5)
+		(4 3))
+     (0 0 1 1 1 0 0 0) ;; 38
+     (e e e e e e e e))
+    ((jr nc ee) ((4 3 5)7
+		 (4 3))
+     (0 0 1 1 0 0 0 0) ;; 30
+     (e e e e e e e e))
+    ((jr z ee) ((4 3 5)
+		(4 3))
+     (0 0 1 0 1 0 0 0) ;; 28
+     (e e e e e e e e))
+    ((jr nz ee) ((4 3 5)
+		 (4 3))
+     (0 0 1 0 0 0 0 0) ;; 20
+     (e e e e e e e e))
+    
+    ((jp (hl)) (4)
+     (1 1 1 0 1 0 0 1)) ;; E9
+    ((jp (ix)) (4 4)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (1 1 1 0 1 0 0 1)) ;; E9
+    ((jp (iy)) (4 4)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (1 1 1 0 1 0 0 1)) ;; E9
+    
+    ((djnz ee) ((5 3 5)
+		(5 3))
+     (0 0 0 1 0 0 0 0) ;; 20
+     (e e e e e e e e))
+    ))
+
+(define call-and-return-instructions
+  '(((call nn) (4 3 4 3 3)
+     (1 1 0 0 1 1 0 1) ;; CD
+     (n n n n n n n n)
+     (n n n n n n n n))
+    ((call cc nn) ((4 3 4 3 3)
+		   (4 3 3))
+     (1 1 cc cc cc 1 0 0)
+     (n n n  n  n  n n n)
+     (n n n  n  n  n n n))
+    
+    ((ret) (4 3 3)
+     (1 1 0 0 1 0 0 1)) ;; C9
+    ((ret cc) ((5 3 3)
+	       (5))
+     (1 1 cc cc cc 0 0 0))
+    ((reti) (4 4 3 3)
+     (1 1 1 0 1 1 0 1) ;; ED
+     (0 1 0 0 1 1 0 1)) ;; 4D
+    ((retn) (4 4 3 3)
+     (1 1 1 0 1 1 0 1) ;; ED
+     (0 1 0 0 0 1 0 1)) ;; 45
+    
+    ((rst tt) (5 3 3)
+     (1 1 tt tt tt 1 1 1))
+    ))
+
+(define input-output-instructions
+  '(((in a (n)) (4 3 4)
+     (1 1 0 1 1 0 1 1) ;; DB
+     (n n n n n n n n))
+    ((in r (c)) (4 4 4)
+     (1 1 1 0 1 1 0 1) ;; ED [error in book]
+     (0 1 r r r 0 0 0))
+    ((ini) (4 5 3 4)
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 0 0 0 1 0)) ;; A2
+    ((inir) ((4 5 3 4 5)
+	     (4 5 3 4))
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 1 0 0 1 0)) ;; B2
+    ((ind) (4 5 3 4)
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 0 1 0 1 0)) ;; AA
+    ((indr) ((4 5 3 4 5)
+	     (4 5 3 4))
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 1 1 0 1 0)) ;; BA
+
+    ((out (n) a) (4 3 4)
+     (1 1 0 1 0 0 1 1) ;; D3
+     (n n n n n n n n))
+    ((out (c) r) (4 4 4)
+     (1 1 1 0 1 1 0 1) ;; ED
+     (0 1 r r r 0 0 1))
+    ((outi) (4 5 3 4)
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 0 0 0 1 1)) ;; A3
+    ((otir) ((4 5 3 4 5)
+	     (4 5 3 4))
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 1 0 0 1 1)) ;; B3
+    ((outd) (4 5 3 4)
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 0 1 0 1 1)) ;; AB
+    ((otdr) ((4 5 3 4 5)
+	     (4 5 3 4))
+     (1 1 1 0 1 1 0 1) ;; ED
+     (1 0 1 1 1 0 1 1)))) ;; BB

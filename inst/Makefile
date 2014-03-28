@@ -10,7 +10,7 @@ disassembler: disassembler.c opcodes.h
 opcodes.h: dis.scm inst.scm
 	csi -q dis.scm all > opcodes.h
 
-test: tmp test8 test16 testexch testarith testgeneral testarith16
+test: tmp test8 test16 testexch testarith testgeneral testarith16 testjump testcallret testio
 	echo "all tests passed!"
 
 tmp:
@@ -50,3 +50,18 @@ testarith16:
 #	csi -q dis.scm rotate-and-shift-instructions > tmp/rotate_and_shift_instructions.h
 #	diff tmp/rotate_and_shift_instructions.h tests/rotate_and_shift_instructions.h
 #	echo "passed!"
+
+testjump:
+	csi -q dis.scm jump-instructions > tmp/jump_instructions.h
+	diff tmp/jump_instructions.h tests/jump_instructions.h
+	echo "passed!"
+
+testcallret:
+	csi -q dis.scm call-and-return-instructions > tmp/call_and_return_instructions.h
+	diff tmp/call_and_return_instructions.h tests/call_and_return_instructions.h
+	echo "passed!"
+
+testio:
+	csi -q dis.scm input-output-instructions > tmp/input_output_instructions.h
+	diff tmp/input_output_instructions.h tests/input_output_instructions.h
+	echo "passed!"
