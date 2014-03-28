@@ -11,3 +11,4 @@ Skips required to test disassembly
 * `./disassembler tests/arith16.lib 3A`
 * `./disassembler tests/callret.lib 38`
 * `./disassembler tests/io.lib 33`
+* `./disassembler tests/lib/shftrot.s 3C`

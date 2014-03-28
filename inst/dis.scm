@@ -48,8 +48,7 @@
 (define (hex8 nn)
   (string-append "0x" (hex (quotient nn 16)) (hex nn)))
 (define (hex16 nnnn)
-  (string-append "0x" (hex (quotient nnnn 4096)) (hex (quotient nnnn 256)) (hex (quotient nnnn 16)) (hex
- nnnn)))
+  (string-append "0x" (hex (quotient nnnn 4096)) (hex (quotient nnnn 256)) (hex (quotient nnnn 16)) (hex nnnn)))
 
 ;;;;;;;;;;
 ;; main
@@ -251,6 +250,12 @@
 				(case-command-for-opcode opcode-spec 1)
 				(printf-command-for-opcode opcode-spec)
 				"return " (bytes-consumed-by-opcode opcode-spec) ";" "\n")))
+	     (define (bitwise-subgroup-switch opcode-spec)
+	       (let* ((fourth-byte (fourth (cddr opcode-spec)))
+		      (opcode (hex8 (translate-binary fourth-byte))))
+		 (string-append "case " opcode ":" "\n"
+				(printf-command-for-opcode opcode-spec)
+				"return " (bytes-consumed-by-opcode opcode-spec) ";" "\n")))
 	     (define (bitwise-op-opcode? opcode-spec)
 	       (let* ((first-byte (first (cddr opcode-spec)))
 		      (second-byte (second (cddr opcode-spec))))
@@ -268,7 +273,18 @@
 			    "switch(data[1]) {" "\n"
 			    (apply string-append (map subgroup-switch normal-ops))
 			    (if (not (null? bitwise-ops))
-				"// BITWISE OPS HERE\n"
+				(let* ((second-byte (second (cddr (car bitwise-ops))))
+				       (opcode (hex8 (translate-binary second-byte))))
+				  ;; TODO: assert that they all have the same format
+				  ;; DD/FD CB (known) dddddddd 8bits? (test this)
+				  (string-append
+				   "case " opcode ": // CB bitwise operators" "\n"
+				   "  if(size < 4) return -1;" "\n"
+				   "  d = ((signed char*)data)[2];" "\n"
+				   "  switch(data[3]) {" "\n"
+				   (apply string-append (map bitwise-subgroup-switch bitwise-ops))
+				   "  }" "\n"
+				   "\n"))
 				"")
 			    "default:" "\n"
 			    "return -1;" "\n"
