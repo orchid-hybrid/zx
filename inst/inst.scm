@@ -8,6 +8,7 @@
 ;; ir is the interrupt register
 ;; rr- is the refresh register [added - suffix to avoid clash with rr expander]
 ;; af- is used for af' (in general suffix with -)
+;; bb is used to denote a bit, can't use b or clobbers the register
 
 ;; pg81
 ;; pg194 - same but different order
@@ -72,6 +73,17 @@
     (#x28 (1 0 1))
     (#x30 (1 1 0))
     (#x38 (1 1 1))))
+
+;; pg225
+(define bit-table
+  '((0 (0 0 0))
+    (1 (0 0 1))
+    (2 (0 1 0))
+    (3 (0 1 1))
+    (4 (1 0 0))
+    (5 (1 0 1))
+    (6 (1 1 0))
+    (7 (1 1 1))))
 
 (define 8-bit-load-instructions
   '(((ld r r2) (4)
@@ -695,6 +707,60 @@
      (1 1 1 0 1 1 0 1) ;; ED
      (0 1 1 0 0 1 1 1)) ;; 67
     
+    ))
+
+(define set-reset-test-instructions
+  '(((bit bb r) (4 4)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 1 bb bb bb r r r))
+    ((bit bb (hl)) (4 4 4) ;; 12 (4 4 4) 4 in docs, last 4 a typo?
+     (1 1 0 0 1 0 1 1) ;; CB
+     (0 1 bb bb bb 1 1 0))
+    ((bit bb (+ ix d)) (4 4 3 5 4)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 1 bb bb bb 1 1 0))
+    ((bit bb (+ iy d)) (4 4 3 5 4)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (0 1 bb bb bb 1 1 0))
+    
+    ((set bb r) (4 4)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (1 1 bb bb bb r r r))
+    ((set bb (hl)) (4 4 4 3) ;; 12 (4 4 4 3)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (1 1 bb bb bb 1 1 0))
+    ((set bb (+ ix d)) (4 4 3 5 4 3)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (1 1 bb bb bb 1 1 0)) ;; [missing from docs!]
+    ((set bb (+ iy d)) (4 4 3 5 4 3)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (1 1 bb bb bb 1 1 0))
+    
+    ((res bb r) (4 4)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (1 0 bb bb bb r r r))
+    ((res bb (hl)) (4 4 4 3) ;; 12 (4 4 4 3)
+     (1 1 0 0 1 0 1 1) ;; CB
+     (1 0 bb bb bb 1 1 0))
+    ((res bb (+ ix d)) (4 4 3 5 4 3)
+     (1 1 0 1 1 1 0 1) ;; DD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (1 0 bb bb bb 1 1 0)) ;; [missing from docs!]
+    ((res bb (+ iy d)) (4 4 3 5 4 3)
+     (1 1 1 1 1 1 0 1) ;; FD
+     (1 1 0 0 1 0 1 1) ;; CB
+     (d d d d d d d d)
+     (1 0 bb bb bb 1 1 0))
+     
     ))
 
 (define jump-instructions

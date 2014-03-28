@@ -1,4 +1,4 @@
-all: tmp test8 test16 testexch testarith testgeneral testarith16 testrotshf testjump testcallret testio
+all: tmp test8 test16 testexch testarith testgeneral testarith16 testrotshf testbits testjump testcallret testio
 	echo "all tests passed!"
 
 tmp:
@@ -35,9 +35,13 @@ testarith16:
 	echo "passed!"
 
 testrotshf:
-	cd ..
 	csi -q -I .. ../dis.scm rotate-and-shift-instructions > tmp/rotate_and_shift_instructions.h
 	diff tmp/rotate_and_shift_instructions.h headers/rotate_and_shift_instructions.h
+	echo "passed!"
+
+testbits:
+	csi -q -I .. ../dis.scm set-reset-test-instructions > tmp/set_reset_test_instructions.h
+	diff tmp/set_reset_test_instructions.h headers/set_reset_test_instructions.h
 	echo "passed!"
 
 testjump:

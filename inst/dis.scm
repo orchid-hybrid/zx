@@ -128,6 +128,7 @@
       (set! r-expanded (perform-expander expand-helper-3 'rr rr-table))
       (set! r-expanded (perform-expander expand-helper-1 'cc cc-table))
       (set! r-expanded (perform-expander expand-helper-1 'tt tt-table))
+      (set! r-expanded (perform-expander expand-helper-1 'bb bit-table))
       
       r-expanded)))
 
@@ -302,7 +303,8 @@
 				 8-bit-arithmetic-instructions
 				 general-purpose-control-instructions
 				 16-bit-arithmetic-instructions
-				 rotate-and-shift-instructions ;; hard
+				 rotate-and-shift-instructions
+				 set-reset-test-instructions
 				 jump-instructions
 				 call-and-return-instructions
 				 input-output-instructions
@@ -319,6 +321,7 @@
     ((general-purpose-control-instructions) general-purpose-control-instructions)
     ((16-bit-arithmetic-instructions) 16-bit-arithmetic-instructions)
     ((rotate-and-shift-instructions) rotate-and-shift-instructions)
+    ((set-reset-test-instructions) set-reset-test-instructions)
     ((jump-instructions) jump-instructions)
     ((call-and-return-instructions) call-and-return-instructions)
     ((input-output-instructions) input-output-instructions)

@@ -1,0 +1,42 @@
+.SECTION "MAIN"
+	RLCA
+	RLA
+	RRCA
+	RRA
+	RLC	B
+	RLC	C
+	RLC	D
+	RLC	E
+	RLC	H
+	RLC	L
+	RLC	A
+	RLC	(HL)
+	RLC	(IX+99)
+	RLC	(IY-43)
+	RL	E
+	RL	(HL)
+	RL	(IX-1)
+	RL	(IY+4)
+	RRC	E
+	RRC	(HL)
+	RRC	(IX-1)
+	RRC	(IY+4)
+	RR	E
+	RR	(HL)
+	RR	(IX-1)
+	RR	(IY+4)
+	SLA	E
+	SLA	(HL)
+	SLA	(IX-1)
+	SLA	(IY+4)
+	SRA	E
+	SRA	(HL)
+	SRA	(IX-1)
+	SRA	(IY+4)
+	SRL	E
+	SRL	(HL)
+	SRL	(IX-1)
+	SRL	(IY+4)
+	RLD
+	RRD
+.ENDS
