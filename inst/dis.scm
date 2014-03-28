@@ -294,7 +294,7 @@
 
 (define current-instruction-set
   (case (with-input-from-string
-	    (caddr (command-line-arguments)) ;; command line parameters will be -q then dis.scm THEN the atom
+	    (cadddr (cdr (command-line-arguments))) ;; command line parameters will be -q then dis.scm THEN the atom
 	  read)
     ((8-bit-load-instructions) 8-bit-load-instructions)
     ((16-bit-load-instructions) 16-bit-load-instructions)
