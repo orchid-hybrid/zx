@@ -111,7 +111,11 @@
     
     (let ((r-expanded (list opcode-specification)))
       (define (perform-expander expander-helper sym table)
+<<<<<<< HEAD
 	(if (member sym (cdr mnemonic))
+=======
+	(if (member sym mnemonic)
+>>>>>>> 0a8b1a5343e020b090188ba72dd57dce75055cd3
 	    (apply append
 		   (map (lambda (opcode-specification)
 			  (let ((expander (expander-helper sym opcode-specification)))
@@ -286,7 +290,11 @@
 				 8-bit-arithmetic-instructions
 				 general-purpose-control-instructions
 				 16-bit-arithmetic-instructions
+<<<<<<< HEAD
 				 rotate-and-shift-instructions ;; hard
+=======
+				 ;;rotate-and-shift-instructions ;; hard
+>>>>>>> 0a8b1a5343e020b090188ba72dd57dce75055cd3
 				 jump-instructions
 				 call-and-return-instructions
 				 input-output-instructions
