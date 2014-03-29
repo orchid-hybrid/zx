@@ -15,9 +15,10 @@
 	  (cons (car list) (replace-first (cdr list) this that)))))
 
 (define (deep-replace s this that)
-  (if (symbol? s)
-      (if (equal? s this) that s)
-      (map (lambda (s) (deep-replace s this that)) s)))
+  (if (string? s) s
+      (if (symbol? s)
+	  (if (equal? s this) that s)
+	  (map (lambda (s) (deep-replace s this that)) s))))
 
 (define (group-by equal? elements)
   (define (group-insert groups elt equal?)
@@ -334,9 +335,11 @@
 	      (equal? (third op-1) (third op-2)))
 	    (apply append (map expand-opcode current-instruction-set))))
 
+(unless (equal? "-" (cadddr (command-line-arguments)))
+
 (for-each (lambda (opcode-group)
 	    (print (disassembler opcode-group))
 	    (newline))
 	  expanded-instructions)
 
-(exit)
+(exit))

@@ -12,3 +12,8 @@ Skips required to test disassembly
 * `./disassembler tests/callret.lib 38`
 * `./disassembler tests/io.lib 33`
 * `./disassembler tests/lib/shftrot.s 3C`
+
+
+TODO:
+
+* switch the simulator to use the program counter for its execution
