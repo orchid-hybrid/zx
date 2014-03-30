@@ -17,3 +17,4 @@ Skips required to test disassembly
 TODO:
 
 * switch the simulator to use the program counter for its execution
+* make the add instruction do flags correct and finish the 8 bit load ops

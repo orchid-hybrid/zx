@@ -43,7 +43,7 @@ int disassemble_instruction(long size, uint8_t *data) {
   }
 }
 
-int emulate_instruction(z80 *cpu, long size, uint8_t *data) {
+int emulate_instruction(z80 *cpu, MEMORY mem, long size, uint8_t *data) {
   uint8_t n;
   uint16_t nn;
   int8_t d;

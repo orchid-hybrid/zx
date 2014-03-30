@@ -1,6 +1,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// change this to whatever you like
+#define MEMORY uint8_t*
+
+// and then implement these
+uint8_t mem_read_8(MEMORY mem, uint16_t addr);
+uint16_t mem_read_16(MEMORY mem, uint16_t addr);
+void mem_write_8(MEMORY mem, uint16_t addr, uint8_t value);
+void mem_write_16(MEMORY mem, uint16_t addr, uint16_t value);
+
 typedef union {
   struct {
     uint8_t lsb;
@@ -20,4 +29,4 @@ typedef struct {
 void initialize_cpu(z80 *cpu);
 void trace_cpu_state(z80 *cpu);
 int disassemble_instruction(long size, uint8_t *data);
-int emulate_instruction(z80 *cpu, long size, uint8_t *data);
+int emulate_instruction(z80 *cpu, MEMORY mem, long size, uint8_t *data);
