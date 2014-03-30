@@ -6,6 +6,7 @@
 
 // and then implement these
 uint8_t mem_read_8(MEMORY mem, uint16_t addr);
+int8_t mem_read_8_signed(MEMORY mem, uint16_t addr);
 uint16_t mem_read_16(MEMORY mem, uint16_t addr);
 void mem_write_8(MEMORY mem, uint16_t addr, uint8_t value);
 void mem_write_16(MEMORY mem, uint16_t addr, uint16_t value);
@@ -29,4 +30,4 @@ typedef struct {
 void initialize_cpu(z80 *cpu);
 void trace_cpu_state(z80 *cpu);
 int disassemble_instruction(long size, uint8_t *data);
-int emulate_instruction(z80 *cpu, MEMORY mem, long size, uint8_t *data);
+int emulate_instruction(z80 *cpu, MEMORY mem);

@@ -64,7 +64,7 @@
     (let* ((instruction (first opcode))
 	   (bytes (cddr opcode)))
       (string-append
-       "if(size < " (number->string (length (cddr opcode))) ") return -1;" "\n"
+       ;;"if(size < " (number->string (length (cddr opcode))) ") return -1;" "\n"
       (apply string-append
        (map (let ((seen-n #f)
 		  (i bytes-consumed))
@@ -72,11 +72,11 @@
 		(cond ((equal? byte '(d d d d d d d d))
 		       (set! i (+ 1 i))
 		       (string-append
-			"d = ((signed char*)data)["(number->string i)"];" "\n"))
+			"d = mem_read8_signed(mem, cpu->pc++);" "\n"))
 		      ((equal? byte '(e e e e e e e e))
 		       (set! i (+ 1 i)) ;; assumes we can't have a d and an e together
 		       (string-append
-			"d = ((signed char*)data)["(number->string i)"];;" "\n"))
+			"d = mem_read8_signed(mem, cpu->pc++);" "\n"))
 		      ((equal? byte '(n n n n n n n n))
 		       (if seen-n
 			   ""
@@ -85,10 +85,10 @@
 			       (begin
 				 (set! seen-n #t)
 				 (set! i (+ 2 i))
-				 (string-append "nn = data["(number->string (- i 1))"] | data["(number->string i)"] << 8;" "\n"))
+				 (string-append "nn = mem_read16(mem, cpu->pc); cpu->pc += 2;" "\n"))
 			       (begin
 				 (set! i (+ 1 i))
-				 (string-append "n = data["(number->string i)"];" "\n")))))
+				 (string-append "n = mem_read8(mem, cpu->pc++);" "\n")))))
 		      (else (assert (every bit? byte))
 			    ""))))
 	    bytes)))))
@@ -103,7 +103,7 @@
 	   (lambda (has-implementation)
 	     (eval (cdr has-implementation))))
 	  (else (string-append
-		 "unimplemented_instruction(size, data);" "\n"))))
+		 "unimplemented_instruction(10, mem+cpu->pc-1);" "\n"))))
   ;; it is guaranteed that all opcodes have been expanded
   ;; and share the same first byte
   (let ((pat (third (first opcode-group))))
@@ -142,8 +142,8 @@
 	     (let ((normal-ops (filter (negate bitwise-op-opcode?) opcode-group))
 		   (bitwise-ops (filter bitwise-op-opcode? opcode-group)))
 	     (string-append "case " opcode ":" "\n"
-			    "if(size < 2) return -1;" "\n"
-			    "switch(data[1]) {" "\n"
+			    ;;"if(size < 2) return -1;" "\n"
+			    "switch(mem_read8(mem, cpu->pc++)) {" "\n"
 			    (apply string-append (map subgroup-switch normal-ops))
 			    (if (not (null? bitwise-ops))
 				(let* ((second-byte (second (cddr (car bitwise-ops))))
@@ -152,9 +152,10 @@
 				  ;; DD/FD CB (known) dddddddd 8bits? (test this)
 				  (string-append
 				   "case " opcode ": // CB bitwise operators" "\n"
-				   "  if(size < 4) return -1;" "\n"
-				   "  d = ((signed char*)data)[2];" "\n"
-				   "  switch(data[3]) {" "\n"
+				   ;;"  if(size < 4) return -1;" "\n"
+				   ;;"  d = ((signed char*)data)[2];" "\n"
+				   "d = mem_read8_signed(mem, cpu->pc++);" "\n"
+				   "  switch(mem_read8(mem, cpu->pc++)) {" "\n"
 				   (apply string-append (map bitwise-subgroup-switch bitwise-ops))
 				   "  }" "\n"
 				   "\n"))

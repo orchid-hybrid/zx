@@ -43,12 +43,12 @@ int disassemble_instruction(long size, uint8_t *data) {
   }
 }
 
-int emulate_instruction(z80 *cpu, MEMORY mem, long size, uint8_t *data) {
+int emulate_instruction(z80 *cpu, MEMORY mem) {
   uint8_t n;
   uint16_t nn;
   int8_t d;
   
-  switch(data[0]) {
+  switch(mem_read8(mem, cpu->pc++)) {
 #include "z80_instructions.h"
   default:
     return 0;

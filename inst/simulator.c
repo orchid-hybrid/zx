@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "z80.h"
 
 uint8_t mem[0x10000];
+uint8_t tmp;
+
 uint8_t mem_read8(MEMORY mem, uint16_t addr) { return mem[addr]; }
+int8_t mem_read8_signed(MEMORY mem, uint16_t addr) { tmp = mem_read8(mem, addr); return *(int8_t*)&tmp; }
 uint16_t mem_read16(MEMORY mem, uint16_t addr) { return mem[addr] | mem[addr+1] << 8; }
 void mem_write8(MEMORY mem, uint16_t addr, uint8_t value) {
   // TODO: make an example ROM and RAM
@@ -40,25 +44,23 @@ int main(int argc, char **argv) {
     data += strtol(argv[2], NULL, 16);
   }
   
+  memcpy(mem, data, size);
+  
   {
     z80 cpu;
     
     initialize_cpu(&cpu);
     
-    int result, bytes;
-    bytes = 0;
-    printf("0x%.4x: ", bytes);
-    disassemble_instruction(size, data);
-    while((result = emulate_instruction(&cpu, NULL, size, data)) > 0) {
-      size -= result;
-      data += result;
-      bytes += result;
+    printf("0x%.4x: ", cpu.pc);
+    disassemble_instruction(8, mem+cpu.pc);
+    while(emulate_instruction(&cpu, mem) > 0) {
       trace_cpu_state(&cpu);
       //
-      printf("0x%.4x: ", bytes);
-      disassemble_instruction(size, data);
+      printf("0x%.4x: ", cpu.pc);
+      disassemble_instruction(8, mem+cpu.pc);
+      if(mem[cpu.pc] == 0x76) break; // HALT
     }
-    printf("emulated %d bytes\n", bytes);
+    //printf("emulated %d bytes\n", );
   }
   
   return EXIT_SUCCESS;
