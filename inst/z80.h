@@ -27,6 +27,21 @@ typedef struct {
   bool iff1, iff2;
 } z80;
 
+// pg76
+//  7  6  5  4  3  2    1  0
+// [S][Z][X][H][X][P/V][N][C] // [docs wrong, is 4=H right?]
+
+#define FLAG_C 0x01
+#define FLAG_N 0x02
+#define FLAG_PV 0x04
+//
+#define FLAG_H 0x10
+//
+#define FLAG_Z 0x40
+#define FLAG_S 0x80
+#define COMBINE_FLAGS(c,n,pv,h,z,s) ((c)?FLAG_C:0)|((n)?FLAG_N:0)|((pv)?FLAG_PV:0)|((h)?FLAG_H:0)|((z)?FLAG_Z:0)|((s)?FLAG_S:0)
+
+
 void initialize_cpu(z80 *cpu);
 void trace_cpu_state(z80 *cpu);
 int disassemble_instruction(long size, uint8_t *data);

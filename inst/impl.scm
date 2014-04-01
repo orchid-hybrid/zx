@@ -18,12 +18,14 @@
 (define (register r)
   (cpu-accessor (case r
 		  ((a) "af.msb")
+		  ((f) "af.lsb")
 		  ((b) "bc.msb")
 		  ((c) "bc.lsb")
 		  ((d) "de.msb")
 		  ((e) "de.lsb")
 		  ((h) "hl.msb")
 		  ((l) "hl.lsb")
+		  ((af) "af.pair")
 		  ((bc) "bc.pair")
 		  ((de) "de.pair")
 		  ((hl) "hl.pair")
@@ -40,6 +42,8 @@
   (string-append "mem_write8(mem, " addr ", " value ")"))
 (define (mem-write-16 addr value)
   (string-append "mem_write16(mem, " addr ", " value ")"))
+
+(define-instruction (nop))
 
 ;; 8-bit-load-instructions
 (define-instruction (ld r r2)
@@ -108,17 +112,182 @@
   (register 'sp) " = " (register 'ix) ";" "\n")
 (define-instruction (ld sp iy)
   (register 'sp) " = " (register 'iy) ";" "\n")
-;; TODO push and pop
+(define-instruction (push qq)
+  (register 'sp) " -= 2;" "\n"
+  (mem-write-16 (register 'sp) (register 'qq)) ";" "\n")
+(define-instruction (push ix)
+  (register 'sp) " -= 2;" "\n"
+  (mem-write-16 (register 'sp) (register 'ix)) ";" "\n")
+(define-instruction (push iy)
+  (register 'sp) " -= 2;" "\n"
+  (mem-write-16 (register 'sp) (register 'iy)) ";" "\n")
+(define-instruction (pop qq)
+  (register 'qq) " = " (mem-read-16 (register 'sp)) ";" "\n"
+  (register 'sp) " += 2;" "\n")
+(define-instruction (pop ix)
+  (register 'ix) " = " (mem-read-16 (register 'sp)) ";" "\n"
+  (register 'sp) " += 2;" "\n")
+(define-instruction (pop iy)
+  (register 'iy) " = " (mem-read-16 (register 'sp)) ";" "\n"
+  (register 'sp) " += 2;" "\n")
 
 ;; exchange-block-transfer-search-instructions
+(define-instruction (ex de hl)
+  "nn = " (register 'de) ";" "\n"
+  (register 'de) " = " (register 'hl) ";" "\n"
+  (register 'hl) " = nn" ";" "\n")
 
 ;; 8-bit-arithmetic-instructions
 (define-instruction (add n)
-  ;; TODO probably wrong
-  (register 'a) " += n;" "\n")
+  "x = " (register 'a) ";" "\n"
+  "y = n;" "\n"
+  "xy = x + y;" "\n"
+  "UPDATE_FLAGS_ADD8;" "\n"
+  (register 'a) " = xy;" "\n")
+(define-instruction (add (hl))
+  "x = " (register 'a) ";" "\n"
+  "y = " (mem-read-8 (register 'hl)) ";" "\n"
+  "xy = x + y;" "\n"
+  "UPDATE_FLAGS_ADD8;" "\n"
+  (register 'a) " = xy;" "\n")
+(define-instruction (add (+ ix d))
+  "x = " (register 'a) ";" "\n"
+  "y = " (mem-read-8 (register 'ix) "+d") ";" "\n"
+  "xy = x + y;" "\n"
+  "UPDATE_FLAGS_ADD8;" "\n"
+  (register 'a) " = xy;" "\n")
+(define-instruction (add (+ iy d))
+  "x = " (register 'a) ";" "\n"
+  "y = " (mem-read-8 (register 'iy) "+d") ";" "\n"
+  "xy = x + y;" "\n"
+  "UPDATE_FLAGS_ADD8;" "\n"
+  (register 'a) " = xy;" "\n")
+;; TODO: ADC
+(define-instruction (adc n)
+  "x = " (register 'a) ";" "\n"
+  "y = n;" "\n"
+  "xy = x + y + " (register 'f) "&FLAG_C;" "\n"
+  "UPDATE_FLAGS_ADC8;" "\n"
+  (register 'a) " = xy;" "\n")
+;; SUB
+(define-instruction (sub n)
+  "x = " (register 'a) ";" "\n"
+  "y = n;" "\n"
+  "xy = x - y;" "\n"
+  "UPDATE_FLAGS_SUB8;" "\n"
+  (register 'a) " = xy;" "\n")
+(define-instruction (sub (hl))
+  "x = " (register 'a) ";" "\n"
+  "y = " (mem-read-8 (register 'hl)) ";" "\n"
+  "xy = x - y;" "\n"
+  "UPDATE_FLAGS_SUB8;" "\n"
+  (register 'a) " = xy;" "\n")
+(define-instruction (sub (+ ix d))
+  "x = " (register 'a) ";" "\n"
+  "y = " (mem-read-8 (register 'ix) "+d") ";" "\n"
+  "xy = x - y;" "\n"
+  "UPDATE_FLAGS_SUB8;" "\n"
+  (register 'a) " = xy;" "\n")
+(define-instruction (sub (+ iy d))
+  "x = " (register 'a) ";" "\n"
+  "y = " (mem-read-8 (register 'iy) "+d") ";" "\n"
+  "xy = x - y;" "\n"
+  "UPDATE_FLAGS_SUB8;" "\n"
+  (register 'a) " = xy;" "\n")
+;; INC
+(define-instruction (inc r)
+  "x = " (register 'r) ";" "\n"
+  "y = 1;" "\n"
+  "xy = x + y;" "\n"
+  "UPDATE_FLAGS_ADD8;" "\n"
+  (register 'r) " = xy;" "\n")
+(define-instruction (inc (hl))
+  "x = " (mem-read-8 (register 'hl)) ";" "\n"
+  "y = 1;" "\n"
+  "xy = x + y;" "\n"
+  "UPDATE_FLAGS_ADD8;" "\n"
+  (mem-write-8 (register 'hl) "xy") ";" "\n")
+;; DEC
+(define-instruction (dec r)
+  "x = " (register 'r) ";" "\n"
+  "y = 1;" "\n"
+  "xy = x - y;" "\n"
+  "UPDATE_FLAGS_SUB8;" "\n"
+  (register 'r) " = xy;" "\n")
+(define-instruction (dec (hl))
+  "x = " (mem-read-8 (register 'hl)) ";" "\n"
+  "y = 1;" "\n"
+  "xy = x - y;" "\n"
+  "UPDATE_FLAGS_SUB8;" "\n"
+  (mem-write-8 (register 'hl) "xy") ";" "\n")
+;; CP
+(define-instruction (cp n)
+  "x = " (register 'a) ";" "\n"
+  "y = n;" "\n"
+  "xy = x - y;" "\n"
+  "UPDATE_FLAGS_SUB8;" "\n")
+(define-instruction (cp (hl))
+  "x = " (register 'a) ";" "\n"
+  "y = " (mem-read-8 (register 'hl)) ";" "\n"
+  "xy = x - y;" "\n"
+  "UPDATE_FLAGS_SUB8;" "\n")
+(define-instruction (cp (+ ix d))
+  "x = " (register 'a) ";" "\n"
+  "y = " (mem-read-8 (register 'ix) "+d") ";" "\n"
+  "xy = x - y;" "\n"
+  "UPDATE_FLAGS_SUB8;" "\n")
+(define-instruction (cp (+ iy d))
+  "x = " (register 'a) ";" "\n"
+  "y = " (mem-read-8 (register 'iy) "+d") ";" "\n"
+  "xy = x - y;" "\n"
+  "UPDATE_FLAGS_SUB8;" "\n")
+
 
 ;; 16-bit-arithmetic-instructions
 (define-instruction (add hl dd)
   (register 'hl) " += " (register 'dd) ";" "\n")
 ;;(define-instruction (add hl nn)
 ;;  (register 'hl) " += nn;" "\n")
+;; INC
+(define-instruction (inc dd)
+  (register 'dd) "++;" "\n")
+(define-instruction (inc ix)
+  (register 'ix) "++;" "\n")
+(define-instruction (inc iy)
+  (register 'iy) "++;" "\n")
+
+
+;; jump instructions
+(define-instruction (jp nn)
+  (register 'pc) " = nn;" "\n")
+(define-instruction (jp nz nn)
+  "if(!(" (register 'f) "&FLAG_Z)) {" "\n"
+  "  " (register 'pc) " = nn;" "\n"
+  "}" "\n")
+
+;; call and return group
+
+(define-instruction (ret)
+  (register 'pc) " = " (mem-read-16 (register 'sp)) ";" "\n"
+  (register 'sp) " += 2;" "\n")
+(define-instruction (call nn)
+  (register 'sp) " -= 2;" "\n"
+  (mem-write-16 (register 'sp) (register 'pc)) ";" "\n"
+  (register 'pc) " = nn;" "\n")
+;; Description: The current contents of the Program Counter (PC) are pushed onto the top
+;; of the external memory stack. The operands nn are then loaded to the PC to
+;; point to the address in memory where the first Op Code of a subroutine is to
+;; be fetched. At the end of the subroutine, a RETurn instruction can be used
+;; to return to the original program flow by popping the top of the stack back
+;; to the PC. The push is accomplished by first decrementing the current
+;; contents of the Stack Pointer (register pair SP), loading the high-order byte
+;; of the PC contents to the memory address now pointed to by the SP; then
+;; decrementing SP again, and loading the low order byte of the PC contents
+;; to the top of stack.
+;; Because this is a 3-byte instruction, the Program Counter was incremented
+;; by three before the push is executed.
+
+;; 
+(define-instruction (out (n) a)
+  ;; TODO: implement this
+  )

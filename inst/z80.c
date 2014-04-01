@@ -29,6 +29,7 @@ void trace_cpu_state(z80 *cpu) {
 int unimplemented_instruction(long size, uint8_t *data) {
   printf("UNIMPLEMENTED OPCODE [0x%02X]\n", data[0]);
   disassemble_instruction(size, data);
+  exit(0);
 }
 
 int disassemble_instruction(long size, uint8_t *data) {
@@ -47,6 +48,15 @@ int emulate_instruction(z80 *cpu, MEMORY mem) {
   uint8_t n;
   uint16_t nn;
   int8_t d;
+  
+  uint8_t x,y,xy;
+  
+#define UPDATE_FLAGS_ADD8 cpu->af.lsb = COMBINE_FLAGS(xy<x,0,(y^x^0x80)&(y^xy)&0x80,(xy&0x0F)<(x&0x0F),!xy,xy&0x80)
+#define UPDATE_FLAGS_ADC8 cpu->af.lsb = COMBINE_FLAGS(xy<=x,0,(y^x^0x80)&(y^xy)&0x80,(xy&0x0F)<=(x&0x0F),!xy,xy&0x80)
+#define UPDATE_FLAGS_SUB8 cpu->af.lsb = COMBINE_FLAGS(xy>x,1,(y^x^0x80)&(y^xy)&0x80,(xy&0x0F)>(x&0x0F),!xy,xy&0x80)
+  
+  //http://stackoverflow.com/a/199668
+  //http://stackoverflow.com/a/17750382
   
   switch(mem_read8(mem, cpu->pc++)) {
 #include "z80_instructions.h"

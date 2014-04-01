@@ -1,0 +1,45 @@
+UINT8 *padd = &SZHVC_add[  0*256];
+UINT8 *padc = &SZHVC_add[256*256];
+UINT8 *psub = &SZHVC_sub[  0*256];
+UINT8 *psbc = &SZHVC_sub[256*256];
+for (int oldval = 0; oldval < 256; oldval++)
+{
+	for (int newval = 0; newval < 256; newval++)
+	{
+		/* add or adc w/o carry set */
+		int val = newval - oldval;
+		*padd = (newval) ? ((newval & 0x80) ? SF : 0) : ZF;
+		*padd |= (newval & (YF | XF));  /* undocumented flag bits 5+3 */
+		if( (newval & 0x0f) < (oldval & 0x0f) ) *padd |= HF;
+		if( newval < oldval ) *padd |= CF;
+		if( (val^oldval^0x80) & (val^newval) & 0x80 ) *padd |= VF;
+		padd++;
+		
+			/* adc with carry set */
+		val = newval - oldval - 1;
+		*padc = (newval) ? ((newval & 0x80) ? SF : 0) : ZF;
+		*padc |= (newval & (YF | XF));  /* undocumented flag bits 5+3 */
+		if( (newval & 0x0f) <= (oldval & 0x0f) ) *padc |= HF;
+		if( newval <= oldval ) *padc |= CF;
+		if( (val^oldval^0x80) & (val^newval) & 0x80 ) *padc |= VF;
+		padc++;
+
+			/* cp, sub or sbc w/o carry set */
+		val = oldval - newval;
+		*psub = NF | ((newval) ? ((newval & 0x80) ? SF : 0) : ZF);
+		*psub |= (newval & (YF | XF));  /* undocumented flag bits 5+3 */
+		if( (newval & 0x0f) > (oldval & 0x0f) ) *psub |= HF;
+		if( newval > oldval ) *psub |= CF;
+		if( (val^oldval) & (oldval^newval) & 0x80 ) *psub |= VF;
+		psub++;		 
+		
+				/* sbc with carry set */
+		val = oldval - newval - 1;
+		*psbc = NF | ((newval) ? ((newval & 0x80) ? SF : 0) : ZF);
+		*psbc |= (newval & (YF | XF));  /* undocumented flag bits 5+3 */
+		if( (newval & 0x0f) >= (oldval & 0x0f) ) *psbc |= HF;
+		if( newval >= oldval ) *psbc |= CF;
+		if( (val^oldval) & (oldval^newval) & 0x80 ) *psbc |= VF;
+		psbc++;
+	}
+}
