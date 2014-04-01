@@ -54,6 +54,8 @@ int emulate_instruction(z80 *cpu, MEMORY mem) {
 #define UPDATE_FLAGS_ADD8 cpu->af.lsb = COMBINE_FLAGS(xy<x,0,(y^x^0x80)&(y^xy)&0x80,(xy&0x0F)<(x&0x0F),!xy,xy&0x80)
 #define UPDATE_FLAGS_ADC8 cpu->af.lsb = COMBINE_FLAGS(xy<=x,0,(y^x^0x80)&(y^xy)&0x80,(xy&0x0F)<=(x&0x0F),!xy,xy&0x80)
 #define UPDATE_FLAGS_SUB8 cpu->af.lsb = COMBINE_FLAGS(xy>x,1,(y^x^0x80)&(y^xy)&0x80,(xy&0x0F)>(x&0x0F),!xy,xy&0x80)
+
+#define UPDATE_FLAGS_BIT8(v) cpu->af.lsb = COMBINE_FLAGS(0,0,(y^x^0x80)&(y^xy)&0x80,v,!xy,xy&0x80)
   
   //http://stackoverflow.com/a/199668
   //http://stackoverflow.com/a/17750382

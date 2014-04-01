@@ -81,8 +81,9 @@ int main(int argc, char **argv) {
       if(mem[cpu.pc] == 0x76) break; // HALT
       
       instructions++;
-      if(instructions == 40016) {
-	break;
+      printf("%d !!\n", instructions);
+      if(instructions == 42038) {
+      break;
       }
     }
     //printf("emulated %d bytes\n", );
