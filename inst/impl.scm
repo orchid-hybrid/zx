@@ -36,7 +36,9 @@
 		  ((ix) "ix")
 		  ((iy) "iy")
 		  ((sp) "sp")
-		  ((pc) "pc"))))
+		  ((pc) "pc")
+		  ((iff1) "iff1")
+		  ((iff2) "iff2"))))
 
 (define (mem-read-8 . addr)
   (string-append "mem_read8(mem, " (apply string-append addr) ")"))
@@ -469,7 +471,13 @@
 (define-instruction (halt)
   (register 'pc) "--;" "\n")
 ;; DI
+(define-instruction (di)
+  (register 'iff1) " = 0;" "\n"
+  (register 'iff2) " = 0;" "\n")
 ;; EI
+(define-instruction (ei)
+  (register 'iff1) " = 1;" "\n"
+  (register 'iff2) " = 1;" "\n")
 ;; IM 0
 ;; IM 1
 ;; IM 2
@@ -561,6 +569,9 @@
 ;; RRD
 
 ;; bit set and reset group
+;; BIT
+(define-instruction (set bb r)
+  (register 'r) " |= 1<<" (number->string bb) ";" "\n")
 
 ;; jump instructions
 (define-instruction (jp nn)
@@ -584,6 +595,11 @@
 ;; jp PE/PO/Sgn
 (define-instruction (jr ee)
   (register 'pc) " += d;" "\n")
+(define-instruction (jr nz ee)
+  ;; TODO -- return the correct inst count
+  "if(!(" (register 'f) "&FLAG_Z)) {" "\n"
+  "  " (register 'pc) " += d;" "\n"
+  "}" "\n")
 ;; JR C,E
 (define-instruction (jp (hl))
   (register 'pc) " = " (mem-read-16 (register 'hl)) ";" "\n")
@@ -597,6 +613,24 @@
 (define-instruction (ret)
   (register 'pc) " = " (mem-read-16 (register 'sp)) ";" "\n"
   (register 'sp) " += 2;" "\n")
+(define-instruction (ret nz)
+  ;; TODO cycle count
+  "if(!(" (register 'f) "&FLAG_Z)) {" "\n"
+  (register 'pc) " = " (mem-read-16 (register 'sp)) ";" "\n"
+  (register 'sp) " += 2;" "\n"
+  "}" "\n")
+(define-instruction (ret z)
+  ;; TODO cycle count
+  "if((" (register 'f) "&FLAG_Z)) {" "\n"
+  (register 'pc) " = " (mem-read-16 (register 'sp)) ";" "\n"
+  (register 'sp) " += 2;" "\n"
+  "}" "\n")
+(define-instruction (ret c)
+  ;; TODO cycle count
+  "if((" (register 'f) "&FLAG_C)) {" "\n"
+  (register 'pc) " = " (mem-read-16 (register 'sp)) ";" "\n"
+  (register 'sp) " += 2;" "\n"
+  "}" "\n")
 (define-instruction (call nn)
   (register 'sp) " -= 2;" "\n"
   (mem-write-16 (register 'sp) (register 'pc)) ";" "\n"
@@ -616,5 +650,8 @@
 
 ;; 
 (define-instruction (out (n) a)
+  ;; TODO: implement this
+  )
+(define-instruction (in a (n))
   ;; TODO: implement this
   )

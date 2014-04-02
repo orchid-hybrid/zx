@@ -65,35 +65,87 @@ int main(int argc, char **argv) {
   if(fread(mem+0x1800, 0x0800, 1, fptr) != 1) { puts("e"); return EXIT_FAILURE; }
   fclose(fptr);
   
-  {
-    z80 cpu;
-    int  instructions= 0;
-    
-    initialize_cpu(&cpu);
-    
-    printf("0x%.4x: ", cpu.pc);
-    disassemble_instruction(8, mem+cpu.pc);
-    while(emulate_instruction(&cpu, mem) > 0) {
-      trace_cpu_state(&cpu);
-      //
-      printf("0x%.4x: ", cpu.pc);
-      disassemble_instruction(8, mem+cpu.pc);
-      if(mem[cpu.pc] == 0x76) break; // HALT
-      
-      instructions++;
-      printf("%d !!\n", instructions);
-      if(instructions == 42038) {
-      break;
-      }
-    }
-    //printf("emulated %d bytes\n", );
-  }
-  
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) != 0) {
     printf("Cannot initialize SDL\n");
     exit(0);
   }
   SDL_Surface *screen = SDL_SetVideoMode(224, 256, 8, SDL_DOUBLEBUF);
+  
+  {
+    z80 cpu;
+    int instructions = 0;
+    int t = 0;
+    
+    int t_cycles;
+    
+    initialize_cpu(&cpu);
+    
+    // The CPU runs at 2MHz
+    // We trigger interrupts every half frame: 2*60Hz
+    
+    Uint32 t1, t2;
+    
+    int vblank = 1;
+    
+    while(1) {
+      
+#define TWOMEGA 2000000
+      
+    t1 = SDL_GetTicks();
+    t = 0;
+    while(t < TWOMEGA/120) {
+    //while((SDL_GetTicks() - t1) < (1000/120)) {
+      
+      // printf("0x%.4x: ", cpu.pc); disassemble_instruction(8, mem+cpu.pc); trace_cpu_state(&cpu);
+      
+      
+      t_cycles = emulate_instruction(&cpu, mem);
+      instructions++;
+      if(t_cycles < 0) {
+	// BAD NEWS
+	puts("BAD NEWS");
+	break;
+      }
+      t += t_cycles;
+      
+      if(mem[cpu.pc] == 0x76) break; // HALT
+      
+      //if(instructions == 2500000) {
+      //	break;
+      //}
+    }
+    SDL_Event ev;
+    while (SDL_PollEvent(&ev)) {
+      switch (ev.type) {
+      case SDL_QUIT:
+	exit(0);
+	break;
+      default:
+	break;
+      }
+    }
+    if(SDL_GetTicks() - t1 < (1000/120)) {
+      SDL_Delay((1000/120) - (SDL_GetTicks() - t1));
+    }
+    else {
+      puts("TOOK TOO LONG!!!");
+    }
+    
+    vblank = !vblank;
+    if(!vblank) {
+      
+      cpu.sp -= 2;
+      mem_write16(mem, cpu.sp, cpu.pc);
+      cpu.pc = 0x8;
+      
+      continue;
+    }
+    else {
+      cpu.sp -= 2;
+      mem_write16(mem, cpu.sp, cpu.pc);
+      cpu.pc = 0x10;
+    }
+  
   SDL_LockSurface(screen);
   {
     uint8_t *screenPtr = screen->pixels;
@@ -117,18 +169,12 @@ int main(int argc, char **argv) {
   }
   SDL_UnlockSurface(screen);
   SDL_Flip(screen);
-  SDL_Event ev;
-  while(1){
-  while (SDL_PollEvent(&ev)) {
-    switch (ev.type) {
-    case SDL_QUIT:
-      exit(0);
-      break;
-    default:
-      break;
+  
     }
   }
-  }
+  
+  /*
+  */
   
   return EXIT_SUCCESS;
 }

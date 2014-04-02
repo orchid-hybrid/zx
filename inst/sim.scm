@@ -94,7 +94,11 @@
 	    bytes)))))
   (define (t-cycles-for-opcode opcode)
     ;; doesn't handle conditional time instructions
-    (number->string (apply + (second opcode))))
+    (if (every number? (second opcode))
+	(number->string (apply + (second opcode)))
+	"4"
+	;; "-99999"
+	))
   (define (bytes-consumed-by-opcode opcode)
     (number->string (length (cddr opcode))))
   (define (implementation-for-opcode opcode)
@@ -122,13 +126,13 @@
 		 (string-append "case " opcode ":" "\n"
 				(case-command-for-opcode opcode-spec 1)
 				(implementation-for-opcode opcode-spec)
-				"return " (bytes-consumed-by-opcode opcode-spec) ";" "\n")))
+				"return " (t-cycles-for-opcode opcode-spec) ";" "\n")))
 	     (define (bitwise-subgroup-switch opcode-spec)
 	       (let* ((fourth-byte (fourth (cddr opcode-spec)))
 		      (opcode (hex8 (translate-binary fourth-byte))))
 		 (string-append "case " opcode ":" "\n"
 				(implementation-for-opcode opcode-spec)
-				"return " (bytes-consumed-by-opcode opcode-spec) ";" "\n")))
+				"return " (t-cycles-for-opcode opcode-spec) ";" "\n")))
 	     (define (bitwise-op-opcode? opcode-spec)
 	       (let* ((first-byte (first (cddr opcode-spec)))
 		      (second-byte (second (cddr opcode-spec))))
@@ -168,7 +172,7 @@
 	      (string-append "case " opcode ":" "\n"
 			     (case-command-for-opcode (first opcode-group) 0)
 			     (implementation-for-opcode (first opcode-group))
-			     "return " (bytes-consumed-by-opcode (first opcode-group)) ";" "\n"))))))
+			     "return " (t-cycles-for-opcode (first opcode-group)) ";" "\n"))))))
 
 (define expanded-instruction-implementations
   (apply append (map expand-opcode-implementation instruction-implementations)))
