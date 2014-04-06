@@ -26,6 +26,7 @@ void trace_cpu_state(z80 *cpu) {
 	 );
 }
 
+
 int unimplemented_instruction(long size, uint8_t *data) {
   printf("UNIMPLEMENTED OPCODE [0x%02X]\n", data[0]);
   disassemble_instruction(size, data);
@@ -51,9 +52,13 @@ int emulate_instruction(z80 *cpu, MEMORY mem) {
   
   uint8_t x,y,xy;
   
+  // NOTE: This is specific to MEMORY being uint8_t and formatted as an array
+  uint8_t *unimpl = mem + cpu->pc;
+  
 #define UPDATE_FLAGS_ADD8 cpu->af.lsb = COMBINE_FLAGS(xy<x,0,(y^x^0x80)&(y^xy)&0x80,(xy&0x0F)<(x&0x0F),!xy,xy&0x80)
-#define UPDATE_FLAGS_ADC8 cpu->af.lsb = COMBINE_FLAGS(xy<=x,0,(y^x^0x80)&(y^xy)&0x80,(xy&0x0F)<=(x&0x0F),!xy,xy&0x80)
+#define UPDATE_FLAGS_ADC8 if(cpu->af.lsb&FLAG_C) cpu->af.lsb = COMBINE_FLAGS(xy<=x,0,(y^x^0x80)&(y^xy)&0x80,(xy&0x0F)<=(x&0x0F),!xy,xy&0x80); else UPDATE_FLAGS_ADD8
 #define UPDATE_FLAGS_SUB8 cpu->af.lsb = COMBINE_FLAGS(xy>x,1,(y^x^0x80)&(y^xy)&0x80,(xy&0x0F)>(x&0x0F),!xy,xy&0x80)
+#define UPDATE_FLAGS_SBC8 if(cpu->af.lsb&FLAG_C) cpu->af.lsb = COMBINE_FLAGS(xy>=x,1,(y^x^0x80)&(y^xy)&0x80,(xy&0x0F)>=(x&0x0F),!xy,xy&0x80); else UPDATE_FLAGS_SUB8
 
 #define UPDATE_FLAGS_BIT8(v) cpu->af.lsb = COMBINE_FLAGS(0,0,(y^x^0x80)&(y^xy)&0x80,v,!xy,xy&0x80)
   

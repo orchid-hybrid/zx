@@ -271,6 +271,36 @@
   "UPDATE_FLAGS_SUB8;" "\n"
   (register 'a) " = xy;" "\n")
 ;; TODO: SBC #############
+(define-instruction (sbc r)
+  "x = " (register 'a) ";" "\n"
+  "y = " (register 'r) ";" "\n"
+  "xy = x - y - " (register 'f) "&FLAG_C;" "\n"
+  "UPDATE_FLAGS_SBC8;" "\n"
+  (register 'a) " = xy;" "\n")
+(define-instruction (sbc n)
+  "x = " (register 'a) ";" "\n"
+  "y = n;" "\n"
+  "xy = x - y - " (register 'f) "&FLAG_C;" "\n"
+  "UPDATE_FLAGS_SBC8;" "\n"
+  (register 'a) " = xy;" "\n")
+(define-instruction (sbc (hl))
+  "x = " (register 'a) ";" "\n"
+  "y = " (mem-read-8 (register 'hl)) ";" "\n"
+  "xy = x - y - " (register 'f) "&FLAG_C;" "\n"
+  "UPDATE_FLAGS_SBC8;" "\n"
+  (register 'a) " = xy;" "\n")
+(define-instruction (sbc (+ ix d))
+  "x = " (register 'a) ";" "\n"
+  "y = " (mem-read-8 (register 'ix) "+d") ";" "\n"
+  "xy = x - y - " (register 'f) "&FLAG_C;" "\n"
+  "UPDATE_FLAGS_SBC8;" "\n"
+  (register 'a) " = xy;" "\n")
+(define-instruction (sbc (+ iy d))
+  "x = " (register 'a) ";" "\n"
+  "y = " (mem-read-8 (register 'iy) "+d") ";" "\n"
+  "xy = x - y - " (register 'f) "&FLAG_C;" "\n"
+  "UPDATE_FLAGS_SBC8;" "\n"
+  (register 'a) " = xy;" "\n")
 ;; TODO: AND #############
 (define-instruction (and r)
   "x = " (register 'a) ";" "\n"
@@ -592,14 +622,21 @@
   "if((" (register 'f) "&FLAG_C)) {" "\n"
   "  " (register 'pc) " = nn;" "\n"
   "}" "\n")
+(define-instruction (jp p nn)
+  ;; TODO not sure this is correct
+  "if(!(" (register 'f) "&FLAG_S)) {" "\n"
+  "  " (register 'pc) " = nn;" "\n"
+  "}" "\n")
+(define-instruction (jp m nn)
+  "if((" (register 'f) "&FLAG_S)) {" "\n"
+  "  " (register 'pc) " = nn;" "\n"
+  "}" "\n")
 ;; jp PE/PO/Sgn
 (define-instruction (jr ee)
   (register 'pc) " += d;" "\n")
 (define-instruction (jr nz ee)
-  ;; TODO -- return the correct inst count
   "if(!(" (register 'f) "&FLAG_Z)) {" "\n"
-  "  " (register 'pc) " += d;" "\n"
-  "}" "\n")
+  "  " (register 'pc) " += d;" "\n")
 ;; JR C,E
 (define-instruction (jp (hl))
   (register 'pc) " = " (mem-read-16 (register 'hl)) ";" "\n")
@@ -610,43 +647,59 @@
 ;; DJNZ e
 
 ;; call and return group
-(define-instruction (ret)
-  (register 'pc) " = " (mem-read-16 (register 'sp)) ";" "\n"
-  (register 'sp) " += 2;" "\n")
-(define-instruction (ret nz)
-  ;; TODO cycle count
-  "if(!(" (register 'f) "&FLAG_Z)) {" "\n"
-  (register 'pc) " = " (mem-read-16 (register 'sp)) ";" "\n"
-  (register 'sp) " += 2;" "\n"
-  "}" "\n")
-(define-instruction (ret z)
-  ;; TODO cycle count
-  "if((" (register 'f) "&FLAG_Z)) {" "\n"
-  (register 'pc) " = " (mem-read-16 (register 'sp)) ";" "\n"
-  (register 'sp) " += 2;" "\n"
-  "}" "\n")
-(define-instruction (ret c)
-  ;; TODO cycle count
-  "if((" (register 'f) "&FLAG_C)) {" "\n"
-  (register 'pc) " = " (mem-read-16 (register 'sp)) ";" "\n"
-  (register 'sp) " += 2;" "\n"
-  "}" "\n")
 (define-instruction (call nn)
   (register 'sp) " -= 2;" "\n"
   (mem-write-16 (register 'sp) (register 'pc)) ";" "\n"
   (register 'pc) " = nn;" "\n")
-;; Description: The current contents of the Program Counter (PC) are pushed onto the top
-;; of the external memory stack. The operands nn are then loaded to the PC to
-;; point to the address in memory where the first Op Code of a subroutine is to
-;; be fetched. At the end of the subroutine, a RETurn instruction can be used
-;; to return to the original program flow by popping the top of the stack back
-;; to the PC. The push is accomplished by first decrementing the current
-;; contents of the Stack Pointer (register pair SP), loading the high-order byte
-;; of the PC contents to the memory address now pointed to by the SP; then
-;; decrementing SP again, and loading the low order byte of the PC contents
-;; to the top of stack.
-;; Because this is a 3-byte instruction, the Program Counter was incremented
-;; by three before the push is executed.
+(define-instruction (call z nn)
+  "if((" (register 'f) "&FLAG_Z)) {" "\n"
+  (register 'sp) " -= 2;" "\n"
+  (mem-write-16 (register 'sp) (register 'pc)) ";" "\n"
+  (register 'pc) " = nn;" "\n")
+(define-instruction (call nz nn)
+  "if(!(" (register 'f) "&FLAG_Z)) {" "\n"
+  (register 'sp) " -= 2;" "\n"
+  (mem-write-16 (register 'sp) (register 'pc)) ";" "\n"
+  (register 'pc) " = nn;" "\n")
+(define-instruction (call c nn)
+  "if((" (register 'f) "&FLAG_C)) {" "\n"
+  (register 'sp) " -= 2;" "\n"
+  (mem-write-16 (register 'sp) (register 'pc)) ";" "\n"
+  (register 'pc) " = nn;" "\n")
+(define-instruction (call nc nn)
+  "if(!(" (register 'f) "&FLAG_C)) {" "\n"
+  (register 'sp) " -= 2;" "\n"
+  (mem-write-16 (register 'sp) (register 'pc)) ";" "\n"
+  (register 'pc) " = nn;" "\n")
+;; RET
+(define-instruction (ret)
+  (register 'pc) " = " (mem-read-16 (register 'sp)) ";" "\n"
+  (register 'sp) " += 2;" "\n")
+(define-instruction (ret nz)
+  "if(!(" (register 'f) "&FLAG_Z)) {" "\n"
+  (register 'pc) " = " (mem-read-16 (register 'sp)) ";" "\n"
+  (register 'sp) " += 2;" "\n")
+(define-instruction (ret z)
+  "if((" (register 'f) "&FLAG_Z)) {" "\n"
+  (register 'pc) " = " (mem-read-16 (register 'sp)) ";" "\n"
+  (register 'sp) " += 2;" "\n")
+(define-instruction (ret c)
+  "if((" (register 'f) "&FLAG_C)) {" "\n"
+  (register 'pc) " = " (mem-read-16 (register 'sp)) ";" "\n"
+  (register 'sp) " += 2;" "\n")
+(define-instruction (ret nc)
+  "if(!(" (register 'f) "&FLAG_C)) {" "\n"
+  (register 'pc) " = " (mem-read-16 (register 'sp)) ";" "\n"
+  (register 'sp) " += 2;" "\n")
+;; RETCC
+;; RETI
+;; RETN
+;; RST
+(define-instruction (rst tt)
+  (register 'sp) " -= 2;" "\n"
+  (mem-write-16 (register 'sp) (register 'pc)) ";" "\n"
+  (register 'pc) " = " (hex8 tt)";" "\n")
+
 
 ;; 
 (define-instruction (out (n) a)

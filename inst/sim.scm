@@ -93,11 +93,12 @@
 			    ""))))
 	    bytes)))))
   (define (t-cycles-for-opcode opcode)
-    ;; doesn't handle conditional time instructions
     (if (every number? (second opcode))
-	(number->string (apply + (second opcode)))
-	"4"
-	;; "-99999"
+	(string-append (number->string (apply + (second opcode))) ";")
+	(string-append
+	 (number->string (apply + (first (second opcode))))
+	 "; } else { return "
+	 (number->string (apply + (second (second opcode)))) "; }")
 	))
   (define (bytes-consumed-by-opcode opcode)
     (number->string (length (cddr opcode))))
@@ -107,7 +108,9 @@
 	   (lambda (has-implementation)
 	     (eval (cdr has-implementation))))
 	  (else (string-append
-		 "unimplemented_instruction(10, mem+cpu->pc-1);" "\n"))))
+		 "unimplemented_instruction(10, unimpl);"
+		 (if (every number? (second opcode)) "" " if(0) {")
+		 "\n"))))
   ;; it is guaranteed that all opcodes have been expanded
   ;; and share the same first byte
   (let ((pat (third (first opcode-group))))
@@ -126,13 +129,13 @@
 		 (string-append "case " opcode ":" "\n"
 				(case-command-for-opcode opcode-spec 1)
 				(implementation-for-opcode opcode-spec)
-				"return " (t-cycles-for-opcode opcode-spec) ";" "\n")))
+				"return " (t-cycles-for-opcode opcode-spec) "\n")))
 	     (define (bitwise-subgroup-switch opcode-spec)
 	       (let* ((fourth-byte (fourth (cddr opcode-spec)))
 		      (opcode (hex8 (translate-binary fourth-byte))))
 		 (string-append "case " opcode ":" "\n"
 				(implementation-for-opcode opcode-spec)
-				"return " (t-cycles-for-opcode opcode-spec) ";" "\n")))
+				"return " (t-cycles-for-opcode opcode-spec) "\n")))
 	     (define (bitwise-op-opcode? opcode-spec)
 	       (let* ((first-byte (first (cddr opcode-spec)))
 		      (second-byte (second (cddr opcode-spec))))
@@ -172,7 +175,7 @@
 	      (string-append "case " opcode ":" "\n"
 			     (case-command-for-opcode (first opcode-group) 0)
 			     (implementation-for-opcode (first opcode-group))
-			     "return " (t-cycles-for-opcode (first opcode-group)) ";" "\n"))))))
+			     "return " (t-cycles-for-opcode (first opcode-group)) "\n"))))))
 
 (define expanded-instruction-implementations
   (apply append (map expand-opcode-implementation instruction-implementations)))

@@ -15,7 +15,7 @@ int disassemble_instruction(long size, unsigned char *data) {
 
 int main(int argc, char **argv) {
   FILE *fptr;
-  long size;
+  long size, offset;
   unsigned char *data;
   
   if(argc != 2 && argc != 3) {
@@ -37,20 +37,21 @@ int main(int argc, char **argv) {
   
   // since wla-dx adds some header stuff
   if(argc == 3) {
-    size -= strtol(argv[2], NULL, 16);
-    data += strtol(argv[2], NULL, 16);
+    offset = strtol(argv[2], NULL, 16);
+    size -= offset;
+    data += offset;
   }
   
   {
 
     int result, bytes;
     bytes = 0;
-    printf("0x%.4x: ", bytes);
+    printf("0x%.4x: ", bytes+offset);
     while((result = disassemble_instruction(size, data)) > 0) {
       size -= result;
       data += result;
       bytes += result;
-      printf("0x%.4x: ", bytes);
+      printf("0x%.4x: ", bytes+offset);
     }
     printf("disassembled %d bytes\n", bytes);
   }

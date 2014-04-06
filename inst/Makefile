@@ -16,10 +16,10 @@ simulator: simulator.o z80.o
 	gcc simulator.o z80.o -o simulator
 
 simulator.o: simulator.c z80.h z80.c
-	gcc -c simulator.c
+	gcc -g -c simulator.c
 
 z80.o: z80.c z80.h z80_instructions.h
-	gcc -c z80.c
+	gcc -g -c z80.c
 
 z80_instructions.h: inst.scm impl.scm sim.scm
 	csi -q sim.scm - - all > z80_instructions.h

@@ -87,17 +87,23 @@ int main(int argc, char **argv) {
     
     int vblank = 1;
     
+    float speedup = 1/3.0;
+    
     while(1) {
       
 #define TWOMEGA 2000000
       
     t1 = SDL_GetTicks();
     t = 0;
-    while(t < TWOMEGA/120) {
+    while(t < (TWOMEGA/120)*speedup) {
     //while((SDL_GetTicks() - t1) < (1000/120)) {
       
       // printf("0x%.4x: ", cpu.pc); disassemble_instruction(8, mem+cpu.pc); trace_cpu_state(&cpu);
       
+      // debugging jump out of rom bug
+      if(instructions >= 2358034) {
+	printf("0x%.4x: ", cpu.pc); disassemble_instruction(8, mem+cpu.pc); trace_cpu_state(&cpu);
+      }
       
       t_cycles = emulate_instruction(&cpu, mem);
       instructions++;
@@ -107,6 +113,10 @@ int main(int argc, char **argv) {
 	break;
       }
       t += t_cycles;
+      
+      if(cpu.pc >= 0x2000) {
+	printf("left ROM at %d\n", instructions);
+      }
       
       if(mem[cpu.pc] == 0x76) break; // HALT
       
@@ -124,8 +134,8 @@ int main(int argc, char **argv) {
 	break;
       }
     }
-    if(SDL_GetTicks() - t1 < (1000/120)) {
-      SDL_Delay((1000/120) - (SDL_GetTicks() - t1));
+    if(SDL_GetTicks() - t1 < (1000/120)*speedup) {
+      SDL_Delay((1000/120)*speedup - (SDL_GetTicks() - t1));
     }
     else {
       puts("TOOK TOO LONG!!!");
