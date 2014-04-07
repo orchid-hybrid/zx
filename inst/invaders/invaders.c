@@ -19,13 +19,19 @@ uint8_t tmp;
 
 uint8_t mem_read8(MEMORY mem, uint16_t addr) {
   if(addr >= 0x4000) {
-    puts("RAM MIRROR READ\n");
+    puts("RAM MIRROR READ 8\n");
     exit(0);
   }
   return mem[addr];
 }
 int8_t mem_read8_signed(MEMORY mem, uint16_t addr) { tmp = mem_read8(mem, addr); return *(int8_t*)&tmp; }
-uint16_t mem_read16(MEMORY mem, uint16_t addr) { return mem[addr] | mem[addr+1] << 8; }
+uint16_t mem_read16(MEMORY mem, uint16_t addr) {
+    if(addr >= 0x4000-1) {
+    puts("RAM MIRROR READ 16\n");
+      exit(0);
+    }
+    return mem[addr] | mem[addr+1] << 8;
+}
 void mem_write8(MEMORY mem, uint16_t addr, uint8_t value) {
   if(addr >= 0x4000) {
     puts("RAM MIRROR WRITE\n");
@@ -87,7 +93,10 @@ int main(int argc, char **argv) {
     
     int vblank = 1;
     
-    float speedup = 1/3.0;
+    float speedup = 1;//1/3.0;
+    
+    // more debugging the ROM jumpout
+    int inst_counts[0xFF] = {0};
     
     while(1) {
       
@@ -95,18 +104,71 @@ int main(int argc, char **argv) {
       
     t1 = SDL_GetTicks();
     t = 0;
-    while(t < (TWOMEGA/120)*speedup) {
+    while(t < (TWOMEGA/120)) {
     //while((SDL_GetTicks() - t1) < (1000/120)) {
       
       // printf("0x%.4x: ", cpu.pc); disassemble_instruction(8, mem+cpu.pc); trace_cpu_state(&cpu);
       
       // debugging jump out of rom bug
-      if(instructions >= 2358034) {
-	printf("0x%.4x: ", cpu.pc); disassemble_instruction(8, mem+cpu.pc); trace_cpu_state(&cpu);
+
+      // execution from 0x0262 seems to be okay
+      // so the question is why is (hl) 03BB
+      if(1 && instructions >= 2358034-100) {
+	int lowest, insts_printed;
+	int i;
+	int seen;
+	insts_printed = 0;
+	lowest = 1;
+	while(insts_printed < 0x50) {
+	  seen = 0;
+	  for(i = 0; i < 0xFF; i++) {
+	    if(inst_counts[i] == lowest) {
+	      insts_printed++;
+	      if(!seen) {
+		seen = 1;
+		printf("\n%d:", lowest);
+	      }
+	      printf(" 0x%02X", i);
+	    }
+	  }
+	  lowest++;
+	}
+	puts("");
+	
+	/*
+1: 0x16 0x2A 0x31 0x46 0x78 0xC4 0xF6
+2: 0x00 0x2E 0x79
+3: 0x07 0x56 0x5E 0x66 0x7A 0x7B
+5: 0xD8
+6: 0x0E 0x1F 0x4F
+7: 0x7E
+8: 0x57
+9: 0x5F
+10: 0x37
+12: 0xF5
+14: 0x67
+16: 0xC6
+32: 0x03
+34: 0x0A
+*/
+	exit(0);
+	
+	//
+	
+	trace_cpu_state(&cpu);
+	// todo align it to 0x10
+	for(i = 0; i < 0x20; i+=2) {
+	  if(!(i%0x10)) printf("\n0x%.4x: ", cpu.sp-0x10+i);
+	  printf("%04X ", *(uint16_t*)(mem+cpu.sp-0x10+i));
+	}
+	puts("\n");
+	printf("0x%.4x: ", cpu.pc); disassemble_instruction(8, mem+cpu.pc);
+	puts("\n");
       }
       
       t_cycles = emulate_instruction(&cpu, mem);
       instructions++;
+      inst_counts[*(mem+cpu.pc)]++;
       if(t_cycles < 0) {
 	// BAD NEWS
 	puts("BAD NEWS");
@@ -134,8 +196,8 @@ int main(int argc, char **argv) {
 	break;
       }
     }
-    if(SDL_GetTicks() - t1 < (1000/120)*speedup) {
-      SDL_Delay((1000/120)*speedup - (SDL_GetTicks() - t1));
+    if((SDL_GetTicks() - t1) < (1000*speedup/120)) {
+      SDL_Delay(((1000*speedup/120) - (SDL_GetTicks() - t1)));
     }
     else {
       puts("TOOK TOO LONG!!!");

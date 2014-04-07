@@ -141,9 +141,9 @@
   (register 'de) " = " (register 'hl) ";" "\n"
   (register 'hl) " = nn" ";" "\n")
 (define-instruction (ex af af-)
-  "nn = " (register 'de) ";" "\n"
-  (register 'de) " = " (register 'hl) ";" "\n"
-  (register 'hl) " = nn" ";" "\n")
+  "nn = " (register 'af) ";" "\n"
+  (register 'af) " = " (register 'af-) ";" "\n"
+  (register 'af-) " = nn" ";" "\n")
 (define-instruction (exx)
   "nn = " (register 'bc) ";" "\n"
   (register 'bc) " = " (register 'bc-) ";" "\n"
@@ -484,7 +484,6 @@
   "UPDATE_FLAGS_SUB8;" "\n"
   (register 'a) " = xy;" "\n")
 (define-instruction (ccf)
-  ;; TODO: "H, previous carry is copied" test this is correct
   "if(" (register 'f)"&FLAG_C" ") {" "\n"
   "  " (register 'f) " |= FLAG_H;"
   "  " (register 'f) " &= ~FLAG_C;" "\n"
