@@ -1,0 +1,17 @@
+all: i8080.o i8080_hal.o invaders.o
+	gcc -lSDL i8080.o i8080_hal.o invaders.o -o invaders
+
+i8080.o: i8080-core/i8080.c
+	gcc -I i8080-core -c i8080-core/i8080.c -o i8080.o
+
+i8080_hal.o: i8080_hal.c
+	gcc -I i8080-core -c i8080_hal.c -o i8080_hal.o
+
+invaders.o: invaders.c
+	gcc -I . -c invaders.c -o invaders.o
+
+clean:
+	rm -f i8080.o
+	rm -f i8080_hal.o
+	rm -f invaders.o
+	rm -f invaders
