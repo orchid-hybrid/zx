@@ -13,18 +13,18 @@
 extern int i8080_execute(int opcode);
 
 int shift_register;
-int mask_offset;
+int shift_offset;
 
 // These two functions implement the hardware shift register
 // that is used to move the aliens around the screen, as well
 // as the key inputs
 int i8080_hal_io_input(int port) {
   if(port == 3) {
-    return (shift_register >> mask_offset) & 0xFF;
+    return (shift_register >> (8 - shift_offset)) & 0xFF;
   }
   
   if(port == 1) {
-    return ((1&(rand()%2)&(rand()%2)&(rand()%2))<<((rand()%2)*2)) | (1<<3);
+    return ((1&(rand()%2)&(rand()%2)&(rand()%2))<<((rand()%7))) | (1<<3);
   }
   
   return 0;
@@ -32,11 +32,11 @@ int i8080_hal_io_input(int port) {
 
 void i8080_hal_io_output(int port, int value) {
   if(port == 4) {
-    shift_register <<= 8;
-    shift_register |= value & 0xFF;
+    shift_register >>= 8;
+    shift_register |= (value << 8) & 0xFF00;
   }
-  else if(port == 3) {
-    mask_offset = value;
+  else if(port == 2) {
+    shift_offset = value & 0x7;
   }
 }
 
@@ -131,10 +131,10 @@ int main(void) {
     vblank = !vblank;
     if(vblank) {
       i8080_execute(0xD7); // RST 0x10
-      continue; // swapped these around, seems a bit better.. who knows?
     }
     else {
       i8080_execute(0xCF); // RST 0x08
+      continue;
     }
     SDL_LockSurface(screen);
     map_vram_to_screen(screen->pixels);
